@@ -1,0 +1,50 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    .max-w-md {
+        max-width: 450px !important;
+        margin: 0 auto;
+    }
+</style>
+
+<div class="bg-light min-vh-100 pb-5">
+
+    <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+        <div class="max-w-md d-flex align-items-center gap-3">
+            <a href="{% url 'driver_settings' %}" class="text-dark text-decoration-none d-flex align-items-center">
+                <i class="fi fi-rr-arrow-small-left fs-2 mb-0"></i>
+            </a>
+            <div>
+                <h1 class="h5 fw-bold text-dark mb-0">Privacy Policy</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4 max-w-md">
+
+        <div class="text-center mb-4">
+            <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 70px; height: 70px;">
+                <i class="fi fi-rr-shield-check fs-1 mt-2"></i>
+            </div>
+            <h2 class="h5 fw-bold text-dark mb-1">Your Data is Secure</h2>
+            <p class="text-muted small">Last updated: May 2026</p>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 bg-white p-4 mb-4">
+            
+            <p class="text-muted small lh-lg mb-4 text-justify">
+                At RoadAssist, your safety and privacy are our absolute top priorities during every roadside interaction. When you request or provide assistance on the road, we collect only the essential location coordinates, vehicle details, and contact information necessary to connect you with the right help quickly. We ensure that this critical data is securely encrypted in transit and shared exclusively with verified mechanics or drivers who are actively assigned to your specific job. This strict data-sharing protocol guarantees that your personal whereabouts remain private, giving you the assurance you need for a safe, reliable, and stress-free rescue.
+            </p>
+
+            <p class="text-muted small lh-lg mb-0 text-justify">
+                Furthermore, to guarantee a consistently high standard of service and foster good interactions between our users and responders, we maintain temporary, secure records of your assistance history. This operational data is strictly utilized for internal quality assurance, resolving any potential disputes, and improving the efficiency of our emergency dispatch algorithms. We will never sell your personal details to third-party marketers or data brokers, ensuring your absolute peace of mind from the moment you tap "Request Help" until you are safely back on the road.
+            </p>
+            
+        </div>
+
+    </div>
+</div>
+{% endblock %}

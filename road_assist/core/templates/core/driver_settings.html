@@ -1,0 +1,191 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    .max-w-md {
+        max-width: 450px !important;
+        margin: 0 auto;
+    }
+    .settings-item {
+        transition: background-color 0.2s ease-in-out, transform 0.1s ease-in-out;
+        cursor: pointer;
+    }
+    .settings-item:active {
+        background-color: #f8f9fa !important;
+        transform: scale(0.99);
+    }
+</style>
+
+<div class="bg-light min-vh-100 pb-5">
+
+    <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+        <div class="max-w-md d-flex justify-content-between align-items-center">
+            <div>
+                <h1 class="h5 fw-bold text-dark mb-0">Settings and Activity</h1>
+            </div>
+            <span class="badge bg-danger bg-opacity-10 text-black rounded-pill px-3 py-2 fw-bold small">
+                Driver Mode
+            </span>
+        </div>
+    </div>
+
+    <div class="container mt-3 max-w-md">
+
+        <div class="container border-0 shadow-sm rounded-4 bg-white p-3 mb-4">
+            <div class="d-flex align-items-center gap-3">
+                <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm" style="width: 60px; height: 60px;">
+                    {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
+                </div>
+                <div class="flex-grow-1">
+                    <h2 class="h6 fw-bold text-dark mb-0 fs-5">{{ request.user.get_full_name|default:request.user.username }}</h2>
+                </div>
+            </div>
+        </div>
+        {% if license_doc %}
+    {% if license_doc.is_approved %}
+        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-3 py-2 fw-bold small">
+            <i class="fi fi-rr-check-circle me-1"></i> Verified
+        </span>
+    {% else %}
+        <span class="badge bg-warning bg-opacity-10 text-warning rounded-pill px-3 py-2 fw-bold small">
+            <i class="fi fi-rr-time-fast me-1"></i> Pending Review
+        </span>
+    {% endif %}
+{% else %}
+    <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-3 py-2 fw-bold small">
+        <i class="fi fi-rr-cross-circle me-1"></i> Unverified
+    </span>
+{% endif %}
+
+        <h3 class="h6 text-muted fw-bold mb-2 text-uppercase tracking-wider" style="font-size: 0.75rem;">Account Settings</h3>
+        <div class="container border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="list-group list-group-flush">
+                
+                <a href="{% url 'driver_personal_info' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-0 settings-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-user text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Personal Information</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-right text-muted"></i>
+                </a>
+
+                <a href="{% url 'driver_password_security' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-top settings-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-lock text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Password & Security</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-right text-muted"></i>
+                </a>
+
+                <a href="{% url 'driver_license' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-top settings-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-document text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Driver's License & Permits</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-right text-muted"></i>
+                </a>
+                
+            </div>
+        </div>
+        
+
+        <h3 class="h6 text-muted fw-bold mb-2 text-uppercase tracking-wider" style="font-size: 0.75rem;">App Preferences</h3>
+        <div class="container border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="list-group list-group-flush">
+                
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-0">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-bell text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Push Notifications</span>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input bg-success border-success" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+
+                <div class="list-group-item d-flex justify-content-between align-items-center py-3 border-top">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-marker text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Live Location Tracking</span>
+                    </div>
+                    <div class="form-check form-switch mb-0">
+                        <input class="form-check-input bg-success border-success" type="checkbox" role="switch" checked>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+
+        <h3 class="h6 text-muted fw-bold mb-2 text-uppercase tracking-wider" style="font-size: 0.75rem;">Support</h3>
+        <div class="container border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="list-group list-group-flush">
+                
+                <a href="{% url 'driver_help_center' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-0 settings-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-interrogation text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Help Center & FAQ</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-right text-muted"></i>
+                </a>
+
+                <a href="{% url 'driver_privacy_policy' %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3 border-top settings-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <i class="fi fi-rr-shield-check text-secondary fs-5"></i>
+                        <span class="fw-semibold text-dark small">Privacy Policy</span>
+                    </div>
+                    <i class="fi fi-rr-angle-small-right text-muted"></i>
+                </a>
+                
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <a href="/logout/" class="btn btn-white text-danger border w-100 rounded-3 py-2.5 fw-bold shadow-sm d-flex align-items-center justify-content-center gap-2 settings-item">
+                <i class="fi fi-rr-exit"></i> Sign Out
+            </a>
+        </div>
+
+        <div class="text-center py-2">
+            <p class="text-muted extra-small mb-0" style="font-size: 0.65rem;">RoadAssistant Driver App • Version 2.4.0 (2026)</p>
+        </div>
+
+    </div>
+
+    <div style="height: 85px;"></div>
+
+    <nav class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
+        <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
+            
+            <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                <i class="fi fi-rr-home fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Home</div>
+            </a>
+
+            <a href="{% url 'driver_services' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                <i class="fi fi-rr-apps fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Services</div>
+            </a>
+
+            <a href="{% url 'driver_requests' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                <div class="position-relative d-inline-block">
+                    <i class="fi fi-rr-calendar-lines fs-4"></i>
+                </div>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Requests</div>
+            </a>
+
+            <a href="{% url 'driver_vehicles' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                <i class="fi fi-rr-car-side fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Vehicles</div>
+            </a>
+
+            <a href="{% url 'driver_settings' %}" class="text-decoration-none text-center text-secondary text-danger w-100 transition">
+                <i class="fi fi-rr-user fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Profile</div>
+            </a>
+
+        </div>
+    </nav>
+</div>
+{% endblock %}

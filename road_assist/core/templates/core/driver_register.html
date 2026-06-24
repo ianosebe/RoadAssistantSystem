@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block content %}
+
+<style>
+    .driver-bg {
+        background-image: url('{% static "images/drivers_registry.png" %}');
+        background-size:90% auto;
+        background-position:center;
+        background-repeat: no-repeat;
+    }
+</style>
+<div class="min-h-screen driver-bg flex flex-col justify-center py-12 px-6 lg:px-8">
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="mx-auto w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 mb-4 shadow-sm">
+            <i class="fa-solid fa-car text-3xl"></i>
+        </div>
+        <h2 class="text-center text-3xl font-extrabold text-black">Create a Driver Account</h2>
+        <p class="mt-2 text-center text-sm text-gray-600">
+            Already have an account? <a href="{% url 'login' %}" class="font-medium text-blue-600 hover:text-blue-500">Sign in</a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white py-8 px-6 shadow-lg rounded-2xl sm:px-10 border border-gray-100">
+            <form action="{% url 'register_driver' %}" method="POST" class="space-y-6">
+                {% csrf_token %}
+                
+                <input type="hidden" name="role" value="driver">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Your Name</label>
+                    <input type="text" name="name" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Phone Number</label>
+                    <input type="text" name="phone" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Email Address</label>
+                    <input type="email" name="email" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">Password</label>
+                    <input type="password" name="password" required class="mt-1 block w-full px-4 py-3 border border-gray-300 rounded-xl shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-xl shadow-sm text-sm font-bold text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition">
+                    Register
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,213 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<style>
+    .radar-ping {
+        animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+    }
+    @keyframes ping {
+        75%, 100% { transform: scale(1.5); opacity: 0; }
+    }
+    /* Enlarges the Bootstrap toggle switch to look more like a mobile app */
+    .form-switch .form-check-input {
+        width: 3em;
+        height: 1.5em;
+        cursor: pointer;
+    }
+    /* Soft hover effect for cards */
+    .dashboard-card {
+        transition: transform 0.2s ease-in-out;
+    }
+    .dashboard-card:active {
+        transform: scale(0.97);
+    }
+</style>
+
+<div class="d-flex flex-column position-relative overflow-hidden" style="height: 100vh; width: 100%; background-color: #f8f9fa;">
+    
+    <div class="bg-white p-4 pt-5 shadow-sm position-relative" style="border-bottom-left-radius: 40px; border-bottom-right-radius: 40px; z-index: 10;">
+        
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold fs-4 shadow-sm" style="width: 60px; height: 60px;">
+                    {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
+                </div>
+            <div class="flex-grow-1">
+                    <h2 class="h6 fw-bold text-blue mb-0 fs-5">{{ request.user.first_name|default:request.user.username }}</h2>
+                </div>
+            <div class="form-check form-switch d-flex flex-column align-items-end mb-0">
+                <input class="form-check-input bg-success border-success shadow-none mb-1" type="checkbox" role="switch" id="online-toggle" checked>
+                <label class="form-check-label small fw-bold text-success" for="online-toggle" style="font-size: 0.75rem;">ONLINE</label>
+            </div>
+        </div>
+        
+        <div class="row g-3 pb-2">
+            
+            <div class="col-6">
+                <div class="card dashboard-card bg-warning bg-opacity-10 border-0 shadow-sm h-100 rounded-4">
+                    <div class="card-body text-center p-3">
+                        <i class="fa-solid fa-clock fs-3 text-warning mb-2"></i>
+                        <p class="text-muted small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Pending</p>
+                        <h4 class="fw-bolder text-dark mb-0">{{ pending_jobs|length }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card dashboard-card bg-primary bg-opacity-10 border-0 shadow-sm h-100 rounded-4">
+                    <div class="card-body text-center p-3">
+                        <i class="fa-solid fa-screwdriver-wrench fs-3 text-primary mb-2"></i>
+                        <p class="text-primary small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Active Jobs</p>
+                        <h4 class="fw-bolder text-dark mb-0">{{ in_progress_jobs|length|add:accepted_jobs|length }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card dashboard-card bg-success bg-opacity-10 border-0 shadow-sm h-100 rounded-4">
+                    <div class="card-body text-center p-3">
+                        <i class="fa-solid fa-circle-check fs-3 text-success mb-2"></i>
+                        <p class="text-success small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Completed</p>
+                        <h4 class="fw-bolder text-dark mb-0">{{ completed_jobs|length }}</h4>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-6">
+                <div class="card dashboard-card bg-secondary bg-opacity-10 border-0 shadow-sm h-100 rounded-4">
+                    <div class="card-body text-center p-3">
+                        <i class="fa-solid fa-circle-xmark fs-3 text-secondary mb-2"></i>
+                        <p class="text-secondary small fw-bold text-uppercase mb-1" style="font-size: 0.75rem;">Cancelled</p>
+                        <h4 class="fw-bolder text-dark mb-0">{{ cancelled_jobs|length }}</h4>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="flex-grow-1 position-relative w-100 h-100 pb-5" style="background-color: #e9ecef;">
+        
+        <div id="map" class="position-absolute top-0 start-0 w-100 h-100 z-0"></div>
+
+        {% if not pending_jobs %}
+            <div class="position-absolute top-50 start-50 translate-middle d-flex flex-column align-items-center justify-content-center pe-none" style="z-index: 5;">
+                <div class="position-relative d-flex align-items-center justify-content-center mb-5">
+                    
+                    <div class="spinner-grow text-primary position-absolute radar-ping" style="width: 16rem; height: 16rem; opacity: 0.15;" role="status"></div>
+                    <div class="spinner-grow text-primary position-absolute" style="width: 10rem; height: 10rem; opacity: 0.25;" role="status"></div>
+                    
+                    <div class="bg-primary rounded-circle d-flex align-items-center justify-content-center shadow border border-4 border-white position-relative" style="width: 4.5rem; height: 4.5rem; z-index: 10;">
+                        <i class="fa-solid fa-location-crosshairs fs-3 text-white"></i>
+                    </div>
+                </div>
+                <span class="badge bg-white text-secondary shadow-sm px-4 py-2 mt-4 rounded-pill fs-6 fw-medium">Waiting for requests...</span>
+            </div>
+        {% endif %}
+
+        <div id="request-details-card" class="d-none position-absolute bottom-0 start-50 translate-middle-x w-100 px-3" style="max-width: 450px; z-index: 1050; padding-bottom: 85px;">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden relative">
+                
+                <div class="position-absolute top-0 bottom-0 start-0 bg-primary" style="width: 6px;"></div>
+                
+                <div class="card-body ps-4">
+                    <div class="d-flex justify-content-between align-items-start mb-1">
+                        <h4 id="card-issue-type" class="fw-bold text-dark mb-0">Issue Type</h4>
+                        <span class="badge bg-warning text-dark rounded-pill px-2 py-1">Pending</span>
+                    </div>
+                    
+                    <p class="text-muted small mb-3">Requested <span id="card-time"></span></p>
+                    
+                    <div class="bg-light p-3 rounded-3 mb-3 border border-light">
+                        <p class="text-dark small fw-semibold mb-1">
+                            <i class="fa-solid fa-user text-muted me-2" style="width: 16px;"></i> <span id="card-driver-name"></span>
+                        </p>
+                        <p class="text-dark small fw-semibold mb-0">
+                            <i class="fa-solid fa-phone text-muted me-2" style="width: 16px;"></i> <span id="card-driver-phone"></span>
+                        </p>
+                    </div>
+                    
+                    <div class="d-flex gap-2 w-100">
+                        <form id="form-accept" method="POST" action="{% url 'accept_job' 999999 %}" class="flex-grow-1 m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-3 shadow-sm">
+                                ACCEPT
+                            </button>
+                        </form>
+
+                        <form id="form-reject" method="POST" action="{% url 'reject_request' 999999 %}" class="flex-grow-1 m-0">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3 shadow-sm" onclick="return confirm('Reject this request?');">
+                                REJECT
+                            </button>
+                        </form>
+                    </div>
+                    
+                    <button type="button" onclick="closeCard()" class="btn btn-link text-muted w-100 mt-2 text-decoration-none fw-semibold small">
+                        Close Map View
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<script>
+    const pendingRequests = [
+        {% for job in pending_jobs %}
+        {
+            id: "{{ job.id }}",
+            issue_type: "{{ job.issue_type|escapejs }}",
+            driver_name: "{{ job.driver.first_name|escapejs }} {{ job.driver.last_name|escapejs }}",
+            driver_phone: "{{ job.driver.phone_number|escapejs }}",
+            latitude: {{ job.latitude|default:-1.286389 }},
+            longitude: {{ job.longitude|default:36.817223 }},
+            created_at: "{{ job.created_at|timesince }} ago"
+        },
+        {% endfor %}
+    ];
+
+    let map;
+
+    function initMap() {
+        const centerLocation = { lat: -1.286389, lng: 36.817223 }; 
+        
+        map = new google.maps.Map(document.getElementById("map"), {
+            zoom: 13,
+            center: centerLocation,
+            disableDefaultUI: true,
+        });
+
+        pendingRequests.forEach(req => {
+            const marker = new google.maps.Marker({
+                position: { lat: req.latitude, lng: req.longitude },
+                map: map,
+                title: req.issue_type,
+                animation: google.maps.Animation.DROP 
+            });
+
+            marker.addListener("click", () => {
+                showRequestDetails(req);
+            });
+        });
+    }
+
+    function showRequestDetails(req) {
+        document.getElementById("card-issue-type").textContent = req.issue_type;
+        document.getElementById("card-driver-name").textContent = req.driver_name;
+        document.getElementById("card-driver-phone").textContent = req.driver_phone;
+        document.getElementById("card-time").textContent = req.created_at;
+
+        const acceptForm = document.getElementById("form-accept");
+        const rejectForm = document.getElementById("form-reject");
+        
+        acceptForm.action = acceptForm.action.replace('999999', req.id);
+        rejectForm.action = rejectForm.action.replace('999999', req.id);
+
+        const card = document.getElementById("request-details-card");
+        // Swap Bootstrap display classes instead of Tailwind's 'hidden'
+        card.classList.remove("d-none");
+        card.classList.add("d-block");
+    }
+
+    {% endblock %}

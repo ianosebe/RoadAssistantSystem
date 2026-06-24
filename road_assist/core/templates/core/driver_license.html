@@ -1,0 +1,81 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    .max-w-md {
+        max-width: 450px !important;
+        margin: 0 auto;
+    }
+    .form-control:focus {
+        box-shadow: none;
+        border-color: #0d6efd;
+    }
+    /* Custom styling for the image upload boxes */
+    .upload-box {
+        border: 2px dashed #dee2e6;
+        border-radius: 1rem;
+        background-color: #f8f9fa;
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        overflow: hidden;
+    }
+    .upload-box:hover, .upload-box:active {
+        border-color: #0d6efd;
+        background-color: #e9ecef;
+    }
+</style>
+
+<div class="bg-light min-vh-100 pb-5">
+
+    <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+        <div class="max-w-md d-flex align-items-center gap-3">
+            <a href="{% url 'driver_settings' %}" class="text-dark text-decoration-none d-flex align-items-center">
+                <i class="fi fi-rr-arrow-small-left fs-2 mb-0"></i>
+            </a>
+            <div>
+                <h1 class="h5 fw-bold text-dark mb-0">License & Permits</h1>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mt-4 max-w-md">
+
+        <p class="text-muted small mb-4 px-1">Upload clear photos of your valid driver's license. This is required to activate your driver account.</p>
+
+<form method="POST" action="{% url 'driver_license' %}" enctype="multipart/form-data">
+    {% csrf_token %}
+
+    <input type="file" id="frontInput" name="license_front" accept="image/*" hidden onchange="updateFileName(this, 'frontText')">
+    <input type="file" id="backInput" name="license_back" accept="image/*" hidden onchange="updateFileName(this, 'backText')">
+
+    <div class="card border-dashed p-4 text-center mb-3" onclick="document.getElementById('frontInput').click();" style="cursor: pointer;">
+        <i class="fi fi-rr-id-badge fs-2 text-muted"></i>
+        <p class="fw-bold mb-0 mt-2" id="frontText">Tap to upload front</p>
+        <span class="text-muted small">PNG or JPG up to 5MB</span>
+    </div>
+
+    <div class="card border-dashed p-4 text-center mb-4" onclick="document.getElementById('backInput').click();" style="cursor: pointer;">
+        <i class="fi fi-rr-picture fs-2 text-muted"></i>
+        <p class="fw-bold mb-0 mt-2" id="backText">Tap to upload back</p>
+        <span class="text-muted small">PNG or JPG up to 5MB</span>
+    </div>
+
+    <button type="submit" class="btn btn-primary w-100 rounded-3 py-3 fw-bold">
+        Upload Documents
+    </button>
+</form>
+
+    </div>
+</div>
+
+<script>
+function updateFileName(input, textId) {
+    if (input.files && input.files[0]) {
+        document.getElementById(textId).innerHTML = "✓ " + input.files[0].name;
+        document.getElementById(textId).classList.add("text-success");
+    }
+}
+</script>
+{% endblock %}

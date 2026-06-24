@@ -1,0 +1,35 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block bg_image %}background-image: url('{% static "images/index.png" %}');{% endblock %}
+
+{% block content %}
+<div class="flex flex-col items-center justify-between min-h-screen w-full px-6 pb-12 position-relative">    
+    
+    <div class="absolute top-[-10%] right-[-10%] w-64 h-64 bg-white opacity-10 rounded-full blur-3xl pointer-events-none z-0"></div>
+    <div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-blue-400 opacity-20 rounded-full blur-3xl pointer-events-none z-0"></div>
+
+    <div class="mt-24 text-center z-10">
+        
+        <div class="w-24 h-24 bg-white rounded-3xl shadow-2xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+            <i class="fa-solid fa-car-burst text-4xl text-brand-600"></i>
+        </div>
+        
+        <h1 class="text-4xl font-extrabold tracking-tight text-black mb-2">RoadAssistant</h1>
+        <p class="text-black-500 font-light text-lg">Quick and Reliable to provide assistance</p>
+    </div>
+
+    <div class="w-full space-y-4 mb-4 z-10 max-w-sm mx-auto">
+        
+        <a href="{% url 'register_driver' %}" class="flex items-center justify-between w-full py-4 px-6 bg-white/20 backdrop-blur-md border border-white/30 text-white rounded-2xl font-semibold shadow-xl hover:bg-white/30 transition duration-300 group text-decoration-none">
+            <span class="flex items-center gap-3"><i class="fi fi-rr-steering-wheel"></i> Continue as Driver</span>
+            <i class="fi fi-rr-arrow-right opacity-0 group-hover:opacity-100 transition"></i>
+        </a>
+        
+        <a href="{% url 'register_mechanic' %}" class="flex items-center justify-between w-full py-4 px-6 bg-gray-900/80 backdrop-blur-md border border-gray-700 text-white rounded-2xl font-semibold shadow-xl hover:bg-black transition duration-300 group text-decoration-none">
+            <span class="flex items-center gap-3"><i class="fi fi-rr-wrench"></i> Continue as Mechanic</span>
+            <i class="fi fi-rr-arrow-right opacity-0 group-hover:opacity-100 transition"></i>
+        </a>
+    </div>
+</div>
+{% endblock %}

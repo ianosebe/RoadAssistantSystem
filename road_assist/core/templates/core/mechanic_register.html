@@ -1,0 +1,70 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<style>
+    .mechanic-bg {
+        background-image: linear-gradient(rgba(0,0,0,0.65), rgba(0,0,0,0.75)), url('{% static "images/splash_bg.png" %}');
+        background-size: cover;
+        background-position: center;
+        background-repeat: no-repeat;
+    }
+</style>
+
+<div class="min-h-screen mechanic-bg flex flex-col justify-center py-12 px-6 lg:px-8">
+    
+    <div class="sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="mx-auto w-16 h-16 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center text-white mb-4 shadow-lg border border-white/20">
+            <i class="fa-solid fa-wrench text-3xl"></i>
+        </div>
+        <h2 class="text-center text-3xl font-extrabold text-white tracking-tight">Join as a Mechanic</h2>
+        <p class="mt-2 text-center text-sm text-gray-300">
+            Already have an account? <a href="{% url 'login' %}" class="font-bold text-blue-400 hover:text-blue-300 underline transition">Log in here</a>
+        </p>
+    </div>
+
+    <div class="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
+        <div class="bg-white/10 backdrop-blur-lg py-8 px-6 shadow-2xl rounded-2xl sm:px-10 border border-white/20">
+            <form action="{% url 'register_mechanic' %}" method="POST" class="space-y-5">
+                {% csrf_token %}
+                
+                <input type="hidden" name="role" value="mechanic">
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200">Your Name</label>
+                    <input type="text" name="name" required 
+                           class="mt-1 block w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none transition sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200">Phone Number</label>
+                    <input type="text" name="phone" required 
+                           class="mt-1 block w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none transition sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200">Email Address</label>
+                    <input type="email" name="email" required 
+                           class="mt-1 block w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none transition sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200">Password</label>
+                    <input type="password" name="password" required 
+                           class="mt-1 block w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none transition sm:text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-200">Location</label>
+                    <input type="text" name="location" placeholder="e.g. Downtown, City Center" required 
+                           class="mt-1 block w-full px-4 py-3 bg-white/5 border border-white/20 rounded-xl text-white placeholder-gray-400 shadow-sm focus:ring-2 focus:ring-white/50 focus:border-white focus:outline-none transition sm:text-sm">
+                </div>
+
+                <button type="submit" class="w-full flex justify-center py-3.5 px-4 border border-transparent rounded-xl shadow-lg text-sm font-bold text-gray-900 bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-white transition transform active:scale-[0.98]">
+                    Register as Mechanic
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

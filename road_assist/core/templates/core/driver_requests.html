@@ -1,0 +1,228 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    .request-card {
+        transition: all 0.2s ease-in-out;
+    }
+    .request-card:active {
+        transform: scale(0.99);
+    }
+    .pulse-status {
+        animation: statusPulse 1.5s infinite;
+    }
+    @keyframes statusPulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.4; }
+    }
+    /* Make the active tab pop */
+    .nav-pills .nav-link.active {
+        background-color: #0d6efd !important; /* Bootstrap Primary Blue */
+        color: white !important;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+
+<div class="bg-light min-vh-100 pb-5">
+
+    <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+        <div class="max-w-md mx-auto d-flex justify-content-between align-items-center mb-3">
+            <div>
+                <h1 class="h5 fw-bold text-dark mb-0">My Requests</h1>
+                <p class="text-muted small mb-0">Track your assistance bookings</p>
+            </div>
+            <span class="badge bg-light text-dark border rounded-pill px-3 py-2 fw-bold">
+                Total: {{ total_count }}
+            </span>
+        </div>
+
+        <div class="max-w-md mx-auto">
+            <ul class="nav nav-pills nav-fill gap-1 p-1 bg-light rounded-4 border" id="requestTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active rounded-3 py-2 fw-bold text-secondary w-100 d-flex align-items-center justify-content-center gap-2" 
+                            id="progress-tab" data-bs-toggle="pill" data-bs-target="#progress" type="button" role="tab" style="font-size: 0.85rem;">
+                        <i class="fi fi-rr-time-fast"></i> Active
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link rounded-3 py-2 fw-bold text-secondary w-100 d-flex align-items-center justify-content-center gap-2" 
+                            id="history-tab" data-bs-toggle="pill" data-bs-target="#history" type="button" role="tab" style="font-size: 0.85rem;">
+                        <i class="fi fi-rr-clock-three"></i> History
+                    </button>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link rounded-3 py-2 fw-bold text-secondary w-100 d-flex align-items-center justify-content-center gap-2" 
+                       href="{% url 'driver_home' %}" style="font-size: 0.85rem;">
+                        <i class="fi fi-rr-plus-small"></i> Book
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </div>
+
+    <div class="container mt-4 max-w-md">
+        <div class="tab-content" id="requestTabsContent">
+            
+            <div class="tab-pane fade show active" id="progress" role="tabpanel" tabindex="0">
+                {% if active_request %}
+                    <div class="card border-0 shadow-sm rounded-4 overflow-hidden mb-4 bg-white border-start border-4 border-primary">
+                        <div class="bg-primary bg-opacity-10 px-3 py-2 d-flex justify-content-between align-items-center">
+                            <div class="d-flex align-items-center gap-2 text-primary small fw-bold">
+                                <div class="bg-primary rounded-circle pulse-status" style="width: 8px; height: 8px;"></div>
+                                {% if active_request.status == 'Pending' %}
+                                    Finding a Mechanic...
+                                {% else %}
+                                    Mechanic Responding
+                                {% endif %}
+                            </div>
+                            <span class="text-muted extra-small" style="font-size: 0.7rem;">Ref: #REQ-{{ active_request.id }}</span>
+                        </div>
+
+                        <div class="p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <h3 class="h6 fw-bold mb-1 text-dark">{{ active_request.issue_type }}</h3>
+                                    <p class="text-muted small mb-0"><i class="fi fi-rr-marker me-1 text-secondary"></i> Placed from Map Location</p>
+                                </div>
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-3 p-2 d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                    {% if active_request.issue_type == "Car Wont Start" %}
+                                        <i class="fi fi-rr-bolt fs-4"></i>
+                                    {% elif active_request.issue_type == "Flat Tire" %}
+                                        <i class="fi fi-rr-car-side fs-4"></i>
+                                    {% else %}
+                                        <i class="fi fi-rr-wrench fs-4"></i>
+                                    {% endif %}
+                                </div>
+                            </div>
+
+                            {% if active_request.status == 'Accepted' and active_request.mechanic %}
+                                <div class="bg-light rounded-3 p-2.5 d-flex align-items-center justify-content-between mb-3 border">
+                                    <div class="d-flex align-items-center gap-2">
+                                        <div class="bg-secondary text-white rounded-circle d-flex align-items-center justify-content-center fw-bold small" style="width: 32px; height: 32px;">
+                                            {{ active_request.mechanic.user.username|slice:":1"|upper }}
+                                        </div>
+                                        <div>
+                                            <p class="mb-0 fw-bold text-dark small">{{ active_request.mechanic.user.username }}</p>
+                                            <p class="mb-0 text-muted extra-small" style="font-size: 0.65rem;">Professional Mechanic</p>
+                                        </div>
+                                    </div>
+                                    <a href="{% url 'driver_home' %}" class="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold">
+                                        Track Live
+                                    </a>
+                                </div>
+                            {% endif %}
+
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'driver_home' %}" class="btn btn-primary rounded-3 w-100 fw-bold btn-sm py-2 shadow-sm">
+                                    <i class="fi fi-rr-eye me-1"></i> View Live Tracking Screen
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                {% else %}
+                    <div class="bg-white border rounded-4 p-5 text-center text-muted shadow-sm mt-2">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center mx-auto mb-3" style="width: 80px; height: 80px;">
+                            <i class="fi fi-rr-shield-check text-primary opacity-75 fs-1"></i>
+                        </div>
+                        <h4 class="h6 fw-bold text-dark mb-1">No Active Requests</h4>
+                        <p class="small text-muted mb-4">Your vehicle status is completely clear right now.</p>
+                        <a href="{% url 'driver_home' %}" class="btn btn-outline-primary rounded-pill px-4 fw-bold shadow-sm">
+                            Book Assistance
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <div class="tab-pane fade" id="history" role="tabpanel" tabindex="0">
+                <div class="d-flex flex-column gap-2">
+                    {% for req in past_requests %}
+                        <div class="card border-0 shadow-sm rounded-4 bg-white p-3 request-card">
+                            <div class="d-flex justify-content-between align-items-center">
+                                <div class="d-flex align-items-center gap-3">
+                                    <div class="bg-light text-secondary rounded-3 d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
+                                        {% if req.issue_type == "Car Wont Start" %}
+                                            <i class="fi fi-rr-bolt fs-5 text-warning"></i>
+                                        {% elif req.issue_type == "Flat Tire" %}
+                                            <i class="fi fi-rr-car-side fs-5 text-success"></i>
+                                        {% else %}
+                                            <i class="fi fi-rr-wrench fs-5 text-secondary"></i>
+                                        {% endif %}
+                                    </div>
+                                    
+                                    <div>
+                                        <h3 class="h6 fw-bold text-dark mb-0.5" style="font-size: 0.9rem;">{{ req.issue_type }}</h3>
+                                        <p class="text-muted mb-0" style="font-size: 0.7rem;">
+                                            <i class="fi fi-rr-calendar-lines me-1"></i>{{ req.created_at|date:"M d, Y • h:i A" }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div class="text-end">
+                                    {% if req.status == 'Completed' %}
+                                        <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2.5 py-1.5 fw-bold small">
+                                            <i class="fi fi-rr-check-circle me-1 align-middle"></i>Done
+                                        </span>
+                                    {% elif req.status == 'Cancelled' %}
+                                        <span class="badge bg-danger bg-opacity-10 text-danger rounded-pill px-2.5 py-1.5 fw-bold small">
+                                            <i class="fi fi-rr-cross-circle me-1 align-middle"></i>Cancelled
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary rounded-pill px-2.5 py-1.5 fw-bold small">
+                                            {{ req.status }}
+                                        </span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="text-center py-5 text-muted mt-2">
+                            <i class="fi fi-rr-box-open fs-2 opacity-25 mb-2 d-block"></i>
+                            <p class="small mb-0">You haven't placed any assistance requests yet.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+
+        </div> </div>
+
+    <div style="height: 85px;"></div>
+
+    <nav class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
+        <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
+            
+            <a href="{% url 'driver_home' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_home' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
+                <i class="fi fi-rr-home fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Home</div>
+            </a>
+
+            <a href="{% url 'driver_services' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_services' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
+                <i class="fi fi-rr-apps fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Services</div>
+            </a>
+
+            <a href="{% url 'driver_requests' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_requests' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
+                <div class="position-relative d-inline-block">
+                    <i class="fi fi-rr-calendar-lines fs-4"></i>
+                </div>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Requests</div>
+            </a>
+
+            <a href="{% url 'driver_vehicles' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_vehicles' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
+                <i class="fi fi-rr-car-side fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Vehicles</div>
+            </a>
+
+            <a href="{% url 'driver_settings' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_settings' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
+                <i class="fi fi-rr-user fs-4"></i>
+                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Profile</div>
+            </a>
+
+        </div>
+    </nav>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+{% endblock %}
