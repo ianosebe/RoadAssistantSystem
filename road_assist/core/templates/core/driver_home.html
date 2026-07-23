@@ -21,9 +21,60 @@
     /* Rounded corners for chat bubbles */
     .chat-bubble-mine { border-radius: 1rem 1rem 0 1rem; }
     .chat-bubble-theirs { border-radius: 1rem 1rem 1rem 0; }
+
+    .driver-home-shell {
+        width: min(100%, 450px);
+        min-height: 100vh;
+        height: 100vh;
+        border-radius: 32px;
+        box-shadow: 0 20px 50px rgba(0,0,0,.12);
+        overflow: hidden;
+        position: relative;
+    }
+
+    .driver-home-shell .top-bar,
+    .driver-home-shell .bottom-panel,
+    .driver-home-shell .mobile-nav {
+        max-width: 450px;
+        margin: 0 auto;
+    }
+
+    .driver-home-shell .bottom-panel {
+        border-top-left-radius: 40px;
+        border-top-right-radius: 40px;
+    }
+
+    .driver-home-shell nav {
+        left: 50%;
+        transform: translateX(-50%);
+        width: 100%;
+        max-width: 450px;
+    }
+
+    @media (max-width: 420px) {
+        .driver-home-shell {
+            border-radius: 0;
+            box-shadow: none;
+        }
+        .driver-home-shell .bottom-panel {
+            padding-bottom: 100px !important;
+        }
+        .driver-home-shell nav {
+            left: 0;
+            transform: none;
+        }
+        .driver-home-shell .top-bar {
+            padding-left: 0.75rem;
+            padding-right: 0.75rem;
+        }
+        .driver-home-shell .bottom-panel {
+            padding-left: 1rem;
+            padding-right: 1rem;
+        }
+    }
 </style>
 
-<div class="position-relative w-100 overflow-hidden bg-light" style="height: 100vh;">
+<div class="driver-home-shell mx-auto bg-light">
     
     {% if messages %}
     <div class="position-absolute w-100 px-3 mt-5" style="top: 0; z-index: 1040; pointer-events: none;">
@@ -46,7 +97,7 @@
         </div>
     </div>
 
-    <div class="position-absolute top-0 start-0 w-100 p-3 d-flex justify-content-between align-items-center" style="z-index: 20; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);">
+    <div class="position-absolute top-0 start-0 w-100 p-3 top-bar d-flex justify-content-between align-items-center" style="z-index: 20; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);">
         <button class="btn btn-light rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 44px; height: 44px;">
             <i class="fa-solid fa-bars text-secondary"></i>
         </button>
@@ -58,7 +109,7 @@
 
     {% if not active_job %}
     
-    <div class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4" style="z-index: 20; border-top-left-radius: 40px; border-top-right-radius: 40px; padding-bottom: 90px !important;">
+    <div class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
         <div class="bg-secondary opacity-25 rounded-pill mx-auto mb-4" style="width: 48px; height: 6px;"></div>
         
         <h3 class="h4 fw-bold text-dark mb-1">Need Assistance?</h3>
@@ -274,7 +325,7 @@
     </script>
     {% endif %}
 
-    <nav class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
+    <nav class="position-fixed bottom-0 start-0 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
         <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
             
             <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-secondary text-danger w-100 transition">

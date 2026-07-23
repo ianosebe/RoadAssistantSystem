@@ -37,6 +37,14 @@ def register_driver_view(request):
         password = request.POST.get('password')
         role = request.POST.get('role') # Automatically catches 'driver' from the hidden field
 
+        if not phone:
+            messages.error(request, 'Phone number is required.')
+            return redirect('register_driver')
+
+        if CustomUser.objects.filter(phone_number=phone).exists():
+            messages.error(request, 'This phone number is already registered.')
+            return redirect('register_driver')
+
         user = CustomUser.objects.create_user(username=phone, email=email, password=password, phone_number=phone, first_name=name, role=role)
         login(request, user)
         return redirect('driver_home')
@@ -50,6 +58,14 @@ def register_mechanic_view(request):
         email = request.POST.get('email')
         password = request.POST.get('password')
         role = request.POST.get('role') # Automatically catches 'mechanic' from the hidden field
+
+        if not phone:
+            messages.error(request, 'Phone number is required.')
+            return redirect('register_mechanic')
+
+        if CustomUser.objects.filter(phone_number=phone).exists():
+            messages.error(request, 'This phone number is already registered.')
+            return redirect('register_mechanic')
 
         user = CustomUser.objects.create_user(username=phone, email=email, password=password, phone_number=phone, first_name=name, role=role)
         login(request, user)

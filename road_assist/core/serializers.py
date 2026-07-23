@@ -25,6 +25,13 @@ class RegisterSerializer(serializers.ModelSerializer):
         model = CustomUser
         fields = ['id', 'first_name', 'email', 'phone_number', 'role', 'password']
 
+    def validate_phone_number(self, value):
+        if not value:
+            raise serializers.ValidationError('Phone number is required.')
+        if CustomUser.objects.filter(phone_number=value).exists():
+            raise serializers.ValidationError('Phone number is already registered.')
+        return value
+
     def create(self, validated_data):
         password = validated_data.pop('password')
         user = CustomUser(

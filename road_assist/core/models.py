@@ -30,10 +30,12 @@ class CustomUser(AbstractUser):
         ('admin', 'Admin'),
     )
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    phone_number = models.CharField(max_length=15, unique=True)
+    phone_number = models.CharField(max_length=15, unique=True, blank=False, null=False)
     
     # Custom 5-Character Alphanumeric ID
     account_id = models.CharField(max_length=5, unique=True, editable=False, blank=True, null=True)
+
+    REQUIRED_FIELDS = ['email', 'phone_number']
     
     # Driver specific
     vehicle_details = models.CharField(max_length=100, blank=True, null=True)

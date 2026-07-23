@@ -25,9 +25,9 @@
     }
 </style>
 
-<div class="bg-light min-vh-100 pb-5">
-
-    <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+<div class="mobile-shell bg-light pb-5">
+    <div class="mobile-card">
+        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
         <div class="max-w-md mx-auto d-flex justify-content-between align-items-center mb-3">
             <div>
                 <h1 class="h5 fw-bold text-dark mb-0">My Requests</h1>
@@ -189,7 +189,7 @@
 
     <div style="height: 85px;"></div>
 
-    <nav class="position-fixed bottom-0 start-0 w-100 bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
+    <nav class="position-fixed bottom-0 start-0 w-100 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
         <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
             
             <a href="{% url 'driver_home' %}" class="text-decoration-none text-center {% if request.resolver_match.url_name == 'driver_home' %}text-danger{% else %}text-secondary{% endif %} w-100 transition">
