@@ -7,13 +7,11 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.views import PasswordResetView
 from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET, require_POST
-from django.db.models import Q
-from .models import AssistanceRequest
-from .models import Vehicle
-from .models import VerificationDocument
+from django.db.models import Q, Avg
 
-# Ensure these match the exact names in your models.py
-from .models import CustomUser, AssistanceRequest, Message
+# Consolidated and cleaned up imports
+from .models import CustomUser, AssistanceRequest, Message, Vehicle, VerificationDocument, MechanicProfile, Review
+
 
 # ==========================================
 # SPLASH & PASSWORD RESET
@@ -31,7 +29,8 @@ def splash_screen(request):
 # ==========================================
 def register_driver_view(request):
     if request.method == 'POST':
-        name = request.POST.get('name')
+        # CHANGED: Now explicitly grabbing 'first_name' to match the HTML form
+        first_name = request.POST.get('first_name') 
         phone = request.POST.get('phone')
         email = request.POST.get('email')
         password = request.POST.get('password')
@@ -45,8 +44,17 @@ def register_driver_view(request):
             messages.error(request, 'This phone number is already registered.')
             return redirect('register_driver')
 
-        user = CustomUser.objects.create_user(username=phone, email=email, password=password, phone_number=phone, first_name=name, role=role)
-        login(request, user)
+        # CHANGED: Passing the captured first_name variable into the database creation
+        user = CustomUser.objects.create_user(
+            username=phone, 
+            email=email, 
+            password=password, 
+            phone_number=phone, 
+            first_name=first_name, 
+            role=role
+        )
+        
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('driver_home')
 
     return render(request, 'core/driver_register.html')
@@ -68,7 +76,7 @@ def register_mechanic_view(request):
             return redirect('register_mechanic')
 
         user = CustomUser.objects.create_user(username=phone, email=email, password=password, phone_number=phone, first_name=name, role=role)
-        login(request, user)
+        login(request, user, backend='django.contrib.auth.backends.ModelBackend')
         return redirect('mechanic_home')
 
     return render(request, 'core/mechanic_register.html')
@@ -79,35 +87,36 @@ def register_mechanic_view(request):
 # ==========================================
 def login_view(request):
     if request.method == 'POST':
-        username_input = request.POST.get('username')  # This could be an email or a phone number
-        password_input = request.POST.get('password')
-
-        # 1. Look up the user by phone_number OR email in the database
-        try:
-            user_obj = CustomUser.objects.get(Q(phone_number=username_input) | Q(email=username_input))
-            # Treat whatever is in their 'username' field (the phone number) as the login identifier
-            login_username = user_obj.username
-        except CustomUser.DoesNotExist:
-            # If no user matches, pass the raw input so authenticate() handles the failure safely
-            login_username = username_input
-
-        # 2. Check if the credentials match the database
-        user = authenticate(request, username=login_username, password=password_input)
+        login_input = request.POST.get('username')
+        password = request.POST.get('password')
+        
+        user = None
+        if login_input:
+            # Safely fetch the user matching username, email, or phone number
+            user_obj = CustomUser.objects.filter(
+                Q(username__iexact=login_input) | 
+                Q(email__iexact=login_input) | 
+                Q(phone_number__iexact=login_input)
+            ).first()
+            
+            if user_obj:
+                user = authenticate(request, username=user_obj.username, password=password)
 
         if user is not None:
-            # 3. Log them in!
-            login(request, user)
+            # Explicitly pass the custom backend
+            login(request, user, backend='core.backends.EmailOrPhoneModelBackend')
             
-            # 4. Redirect based on role
+            # --- ROLE-BASED REDIRECTION ---
             if user.role == 'mechanic':
-                return redirect('mechanic_home')  
+                return redirect('mechanic_home') 
+            elif user.role == 'admin':
+                return redirect('admin:index')  
             else:
-                return redirect('driver_home')    
+                return redirect('driver_home')  
                 
         else:
-            messages.error(request, "Invalid username or password.")
-            return redirect('login')
-
+            messages.error(request, "Invalid login credentials. Please check your details.")
+            
     return render(request, 'core/login.html')
 
 def logout_user(request):
@@ -120,51 +129,65 @@ def logout_user(request):
 # ==========================================
 @login_required
 def driver_home(request):
-    # ONLY find jobs that are actually live. 
-    # If it's deleted, this returns None. 
-    # If you use 'Cancelled' status, this excludes it.
     active_job = AssistanceRequest.objects.filter(
         driver=request.user, 
         status__in=['Pending', 'Accepted']
     ).first()
+    vehicles = []
+    if request.user.is_authenticated:
+        vehicles = Vehicle.objects.filter(driver=request.user)
     
     return render(request, 'core/driver_home.html', {
-        'active_job': active_job
+        'active_job': active_job,
+        'vehicles': vehicles
     })
 
-# Add this NEW function so the browser can ask "Has anyone accepted yet?"
 @login_required
-def check_job_status(request):
-    # Look for the current active job for this driver
-    job = AssistanceRequest.objects.filter(
-        driver=request.user, 
-        status__in=['Pending', 'Accepted']
-    ).first()
+def check_job_status(request, job_id):
+    job = get_object_or_404(
+        AssistanceRequest.objects.select_related('mechanic__mechanicprofile', 'mechanic__location'), 
+        id=job_id
+    )
     
-    if job:
-        # If a mechanic has accepted, send 'Accepted' + Mechanic details
-        if job.status == 'Accepted' and job.mechanic:
-            return JsonResponse({
-                'status': 'Accepted',
-                'mechanic_name': job.mechanic.first_name,
-                'mechanic_phone': job.mechanic.phone_number if job.mechanic.phone_number else "No phone provided",
-                'issue': job.issue_type
-            })
+    mechanic_name = None
+    mechanic_phone = None
+    mechanic_lat = None
+    mechanic_lng = None
+
+    if job.mechanic:
+        first_name = getattr(job.mechanic, 'first_name', '')
+        last_name = getattr(job.mechanic, 'last_name', '')
+        mechanic_name = f"{first_name} {last_name}".strip() if (first_name or last_name) else str(job.mechanic)
         
-        # Otherwise, tell the UI it's still pending
-        return JsonResponse({'status': 'Pending'})
-    
-    # If the job was deleted/cancelled, tell the UI to reset
-    return JsonResponse({'status': 'None'})
+        mechanic_phone = getattr(job.mechanic, 'phone_number', None)
+        
+        # Safely fetch coordinates from profile or location relation
+        profile = getattr(job.mechanic, 'mechanicprofile', None)
+        loc = getattr(job.mechanic, 'location', None)
+        
+        lat = getattr(profile, 'latitude', None) or getattr(loc, 'latitude', None) or getattr(job.mechanic, 'latitude', None)
+        lng = getattr(profile, 'longitude', None) or getattr(loc, 'longitude', None) or getattr(job.mechanic, 'longitude', None)
+        
+        mechanic_lat = float(lat) if lat is not None else None
+        mechanic_lng = float(lng) if lng is not None else None
+
+    return JsonResponse({
+        'status': job.status, 
+        'mechanic_name': mechanic_name,
+        'mechanic_phone': mechanic_phone,
+        'mechanic_lat': mechanic_lat,
+        'mechanic_lng': mechanic_lng,
+    })
 
 @login_required
 def mechanic_home(request):
-    # ADD .select_related('driver') TO YOUR QUERYSETS!
     pending_jobs = AssistanceRequest.objects.filter(status='Pending', mechanic__isnull=True).select_related('driver')
-    in_progress_jobs = AssistanceRequest.objects.filter(status='In Progress').select_related('driver')
-    accepted_jobs = AssistanceRequest.objects.filter(status='Accepted').select_related('driver')
-    cancelled_jobs = AssistanceRequest.objects.filter(status='Cancelled').select_related('driver')
-    completed_jobs = AssistanceRequest.objects.filter(status='Completed').select_related('driver')
+    
+    in_progress_jobs = AssistanceRequest.objects.filter(status='In Progress', mechanic=request.user).select_related('driver')
+    accepted_jobs = AssistanceRequest.objects.filter(status='Accepted', mechanic=request.user).select_related('driver')
+    
+    cancelled_jobs = AssistanceRequest.objects.filter(status='Cancelled', mechanic=request.user).select_related('driver')
+    completed_jobs = AssistanceRequest.objects.filter(status='Completed', mechanic=request.user).select_related('driver')
     
     context = {
         'pending_jobs': pending_jobs,
@@ -181,13 +204,11 @@ def mechanic_home(request):
 @login_required
 def create_assistance_request(request):
     if request.method == 'POST':
-        # Read the hidden data sent from the Driver's phone/browser
         data = json.loads(request.body)
         issue = data.get('issue_type')
         lat = data.get('latitude')
         lng = data.get('longitude')
 
-        # Create the new job in the database
         new_request = AssistanceRequest.objects.create(
             driver=request.user,
             issue_type=issue,
@@ -207,10 +228,8 @@ def create_assistance_request(request):
 @login_required
 def get_pending_requests(request):
     if request.method == 'GET':
-        # Find all requests that haven't been accepted yet
         pending_jobs = AssistanceRequest.objects.filter(status='Pending')
         
-        # Package them up into a list to send to the Mechanic's map
         jobs_data = []
         for job in pending_jobs:
             jobs_data.append({
@@ -233,10 +252,7 @@ def accept_assistance_request(request):
         job_id = data.get('request_id')
 
         try:
-            # Find the specific job in the database
             job = AssistanceRequest.objects.get(id=job_id, status='Pending')
-            
-            # Update it: Assign this mechanic and mark it accepted!
             job.mechanic = request.user
             job.status = 'Accepted'
             job.save()
@@ -252,72 +268,87 @@ def accept_assistance_request(request):
 @login_required
 def request_assistance(request):
     if request.method == 'POST':
-        issue = request.POST.get('issue_type')
+        issue_type = request.POST.get('issue_type')
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
         
-        # Create the new job ticket in the database
-        # We pass empty strings to latitude and longitude to fix the IntegrityError!
-        AssistanceRequest.objects.create(
+        raw_vehicle_id = request.POST.get('vehicle_id', '').strip()
+        custom_make = request.POST.get('custom_make', '').strip()
+        custom_plate = request.POST.get('custom_plate', '').strip()
+        custom_year = request.POST.get('custom_year', '').strip()
+
+        chosen_vehicle = None
+
+        if raw_vehicle_id and raw_vehicle_id.isdigit():
+            chosen_vehicle = get_object_or_404(Vehicle, id=raw_vehicle_id, driver=request.user)        
+        elif custom_make and custom_plate:
+            try:
+                year_int = int(custom_year)
+            except ValueError:
+                year_int = 2026
+
+            chosen_vehicle = Vehicle.objects.create(
+                driver=request.user,
+                make=custom_make,
+                license_plate=custom_plate,
+                year=year_int
+            )
+            messages.success(request, f"Added {custom_make} ({custom_plate}) to your registered garage!")
+
+        # Safety net logic catches empty strings here
+        if not chosen_vehicle:
+            messages.error(request, "Error: Could not determine vehicle details. Please try again.")
+            return redirect('driver_home')
+
+        assistance_request = AssistanceRequest.objects.create(
             driver=request.user,
-            issue_type=issue,
-            status='Pending',
-            latitude="0.0",   
-            longitude="0.0"   
+            issue_type=issue_type,
+            latitude=latitude,
+            longitude=longitude,
+            vehicle=chosen_vehicle, 
+            status='Pending'
         )
-        
-        messages.success(request, f"Your {issue} request has been sent to nearby mechanics!")
-        return redirect('driver_home') # Send them back to the map
+
+        return redirect('driver_home')
     
 @login_required
 def accept_job(request, request_id):
-    # 1. Find the specific job or show a 404 error if it doesn't exist
     job = get_object_or_404(AssistanceRequest, id=request_id)
     
-    # 2. Safety check: only accept if it's still 'Pending'
     if job.status == 'Pending':
-        job.mechanic = request.user  # Assign the current mechanic
-        job.status = 'Accepted'      # Update status
+        job.mechanic = request.user  
+        job.status = 'Accepted'      
         job.save()
         messages.success(request, f"You've accepted the {job.issue_type} request!")
     else:
         messages.error(request, "Sorry, another mechanic already took this job!")
 
-    # 3. Stay on the dashboard to see updated stats
     return redirect('mechanic_home')
 
 
 @login_required
 def cancel_request(request, request_id):
-    # Find the job belonging to this driver
     job = get_object_or_404(AssistanceRequest, id=request_id, driver=request.user)
-    
-    # We only allow cancelling if a mechanic hasn't started driving yet (optional)
-    # For now, let's just delete it so they can start over
     job.delete()
     
     messages.info(request, "Request cancelled. You can now select a new issue.")
     return redirect('driver_home')
 
+
 @login_required
 @require_GET
 def get_messages(request, job_id):
-    """
-    Fetches all messages for a specific job and sends them back as JSON.
-    """
     try:
-        # Fetch the active job (change AssistanceRequest to your model name)
         job = AssistanceRequest.objects.get(id=job_id)
-        
-        # Get all messages tied to this job
-        messages = job.messages.all()
+        # Ensure messages are ordered chronologically
+        messages = job.messages.all().order_by('timestamp')
         
         msg_list = []
         for msg in messages:
             msg_list.append({
                 'content': msg.content,
-                # is_mine is True if the logged-in user sent it (makes the bubble blue on the right)
                 'is_mine': msg.sender == request.user, 
-                # Format time as '14:30'
-                'timestamp': msg.timestamp.strftime('%H:%M'), 
+                'timestamp': msg.timestamp.strftime('%H:%M') if msg.timestamp else '', 
             })
             
         return JsonResponse({'status': 'success', 'messages': msg_list})
@@ -329,18 +360,12 @@ def get_messages(request, job_id):
 @login_required
 @require_POST
 def send_message(request, job_id):
-    """
-    Receives a new message from the frontend and saves it to the database.
-    """
     try:
         job = AssistanceRequest.objects.get(id=job_id)
-        
-        # Parse the JSON sent by the JavaScript fetch() request
         data = json.loads(request.body)
         content = data.get('content', '').strip()
         
         if content:
-            # Save to database
             Message.objects.create(
                 job=job,
                 sender=request.user,
@@ -357,8 +382,6 @@ def send_message(request, job_id):
     
 @login_required
 def driver_history(request):
-    # Fetch all jobs for this user, ordered by newest first
-    # Adjust 'driver' to match whatever your user foreign key is named in the model
     past_jobs = AssistanceRequest.objects.filter(driver=request.user).order_by('-created_at')
     
     context = {
@@ -368,7 +391,6 @@ def driver_history(request):
 
 @login_required
 def driver_settings(request):
-    # We will build the full settings logic later!
     license_doc = VerificationDocument.objects.filter(user=request.user, doc_type='LICENSE').first()
     
     context = {
@@ -377,50 +399,36 @@ def driver_settings(request):
     return render(request, 'core/driver_settings.html', context)
 
 # ==========================================
-# REJECT REQUEST (Updated!)
+# REJECT REQUEST 
 # ==========================================
 @login_required
 def reject_request(request, request_id):
-    # Find the specific job
     assistance_request = get_object_or_404(AssistanceRequest, id=request_id)
     
-    # Update the database values so other mechanics can see it
     assistance_request.status = 'Pending'
     assistance_request.mechanic = None
     assistance_request.save()
     
     messages.success(request, "Request rejected. It is now available for other mechanics.")
-    
-    # Redirect back to the mechanic homepage
     return redirect('mechanic_home')
 
 @login_required
 def driver_services_view(request):
-    """
-    Renders the driver services dashboard where users can select 
-    specific roadside assistance services.
-    """
     return render(request, 'core/driver_services.html')
 
 @login_required
 def driver_requests_view(request):
-    """
-    Renders all requests initiated by the currently logged-in driver.
-    Isolates active requests from historically completed/cancelled ones.
-    """
-    # 1. Fetch any ongoing request (Pending lookup or actively Accepted/In-Progress)
+    # Fixed select_related to use 'mechanic__mechanicprofile' instead of 'mechanic__user'
     active_request = AssistanceRequest.objects.filter(
         driver=request.user, 
-        status__in=['Pending', 'Accepted', 'In Progress']
-    ).first()
+        status__in=['Pending', 'Accepted', 'In Progress', 'active']
+    ).select_related('mechanic__mechanicprofile', 'vehicle').first()
     
-    # 2. Fetch all historical finalized records (Newest records show first)
     past_requests = AssistanceRequest.objects.filter(
         driver=request.user, 
         status__in=['Completed', 'Cancelled']
-    ).order_by('-created_at')
+    ).select_related('mechanic__mechanicprofile', 'vehicle').order_by('-created_at')
     
-    # 3. Compile statistics
     total_count = AssistanceRequest.objects.filter(driver=request.user).count()
 
     context = {
@@ -432,11 +440,6 @@ def driver_requests_view(request):
 
 @login_required
 def driver_vehicles_view(request):
-    """
-    Renders the garage view where drivers can see their registered vehicles.
-    """
-    # Fetch vehicles belonging to the logged-in user. 
-    # Change 'owner' to 'user' or 'driver' depending on your models.py setup.
     vehicles = Vehicle.objects.filter(driver=request.user).order_by('-id')
     
     context = {
@@ -446,9 +449,6 @@ def driver_vehicles_view(request):
 
 @login_required
 def driver_settings_view(request):
-    """
-    Renders the settings and profile management panel for the driver application.
-    """
     return render(request, 'core/driver_settings.html')
 
 @login_required
@@ -474,31 +474,370 @@ def driver_privacy_policy(request):
 @login_required
 def upload_license(request):
     if request.method == 'POST':
-        # 1. Grab the actual files matching the 'name' attributes in your HTML form
         front_file = request.FILES.get('license_front')
         back_file = request.FILES.get('license_back')
 
-        # 2. Check if at least the front file was uploaded
         if front_file:
-            # 3. Save to the VerificationDocument model
-            # update_or_create ensures that if they upload again, it overwrites their old submission
             VerificationDocument.objects.update_or_create(
                 user=request.user,
-                doc_type='LICENSE',  # Automatically tagging it as a license
+                doc_type='LICENSE',  
                 defaults={
-                    'document_image': front_file,           # Front image
-                    'document_image_back': back_file,       # Back image (can be None)
-                    'is_approved': False                    # Reset approval status
+                    'document_image': front_file,           
+                    'document_image_back': back_file,       
+                    'is_approved': False                    
                 }
             )
-            
-            # 4. Success message and redirect back to settings/profile
             messages.success(request, "License uploaded successfully! It is now pending review.")
             return redirect('driver_settings') 
             
         else:
-            # Error if they clicked submit without adding the front photo
             messages.error(request, "Please upload at least the front of your license.")
 
-    # Show the HTML page for a standard GET request
     return render(request, 'core/driver_license.html')
+
+def car_towing(request):
+    return render(request, 'core/car_towing.html')
+
+@login_required
+def car_towing_options_view(request):
+    return render(request, 'core/car_towing.html')
+
+@login_required
+def car_towing_request_view(request):
+    tier = request.GET.get('tier', 'half_down')
+    
+    pricing_map = {
+        'half_down': {'name': 'Half-Down Towing', 'price': 75},
+        'flatbed': {'name': 'Full-Down (Flatbed)', 'price': 95},
+        'enclosed': {'name': 'Fully Enclosed', 'price': 150},
+    }
+    
+    selected_service = pricing_map.get(tier, pricing_map['half_down'])
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        pickup_location = request.POST.get('pickup_location')
+        destination = request.POST.get('destination')
+        notes = request.POST.get('notes', '')
+        
+        # 1. Compile all textual/pricing data neatly into the description text field
+        full_description = (
+            f"Service Type: {selected_service['name']}\n"
+            f"Estimated Base Cost: ${selected_service['price']}\n"
+            f"Pickup Address: {pickup_location}\n"
+            f"Dropoff Destination: {destination}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        # 2. Safely grab the actual Vehicle database object instance
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        # 3. Create the object matching your model attributes exactly
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Other',  # Valid option from your model's ISSUE_CHOICES
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=0.0,        # Placeholder float required by your model
+            longitude=0.0,       # Placeholder float required by your model
+            status='Pending'
+        )
+        
+        return redirect('driver_requests')
+
+    context = {
+        'selected_service': selected_service,
+        'tier': tier,
+        'vehicles': user_vehicles,
+    }
+    return render(request, 'core/car_towing_request.html', context)
+
+def motorcycle_towing(request):
+    return render(request, 'core/motorcycle_towing.html')
+
+def boat_towing(request):
+    return render(request, 'core/boat_towing.html')
+
+
+# ==========================================
+# ADD VEHICLE (HTML Form Handler)
+# ==========================================
+@login_required
+def add_vehicle(request):
+    if request.method == 'POST':
+        make = request.POST.get('make', '').strip()
+        model = request.POST.get('model', '').strip()
+        year = request.POST.get('year', '').strip()
+        license_plate = request.POST.get('license_plate', '').strip()
+
+        if not (make and model and year and license_plate):
+            messages.error(request, "All vehicle fields are required.")
+            return redirect('driver_vehicles')
+
+        Vehicle.objects.create(
+            driver=request.user,  
+            make=make,
+            model=model,
+            year=year,
+            license_plate=license_plate
+        )
+        
+        messages.success(request, "Vehicle added successfully to your garage!")
+        return redirect('driver_vehicles')
+
+    return redirect('driver_vehicles')
+
+@login_required
+def mechanic_activity(request):
+    active_jobs = AssistanceRequest.objects.filter(mechanic=request.user, status='Accepted')
+    history_jobs = AssistanceRequest.objects.filter(mechanic=request.user, status__in=['Completed', 'Cancelled'])
+    
+    try:
+        reviews = Review.objects.filter(mechanic=request.user)
+        average_rating = reviews.aggregate(Avg('rating'))['rating__avg'] or 0.0
+        total_reviews = reviews.count()
+    except NameError:
+        reviews = []
+        average_rating = 0.0
+        total_reviews = 0
+        
+    context = {
+        'active_jobs': active_jobs,
+        'history_jobs': history_jobs,
+        'reviews': reviews,
+        'average_rating': round(average_rating, 1),
+        'total_reviews': total_reviews,
+    }
+    return render(request, 'core/mechanic_activity.html', context)
+
+
+@login_required
+def mechanic_profile(request):
+    try:
+        mechanic_profile = request.user.mechanicprofile
+    except MechanicProfile.DoesNotExist:
+        mechanic_profile = None
+
+    context = {
+        'mechanic_profile': mechanic_profile,
+    }
+    return render(request, 'core/mechanic_profile.html', context)
+
+
+@login_required
+def complete_job(request, job_id):
+    if request.method == 'POST':
+        job = get_object_or_404(AssistanceRequest, id=job_id, mechanic=request.user)
+        job.status = 'Completed'
+        job.save()
+    return redirect('mechanic_activity')
+
+@login_required
+def request_list_by_status(request, status):
+    mechanic = request.user
+    
+    if status == 'pending':
+        jobs = AssistanceRequest.objects.filter(status='pending').order_by('-created_at')
+    elif status == 'active':
+        jobs = AssistanceRequest.objects.filter(mechanic=mechanic, status__in=['accepted', 'in_progress']).order_by('-created_at')
+    elif status == 'completed':
+        jobs = AssistanceRequest.objects.filter(mechanic=mechanic, status='completed').order_by('-created_at')
+    elif status == 'cancelled':
+        jobs = AssistanceRequest.objects.filter(mechanic=mechanic, status='cancelled').order_by('-created_at')
+    else:
+        jobs = []
+
+    context = {
+        'jobs': jobs,
+        'status_name': status.upper(),
+        'status_slug': status
+    }
+    return render(request, 'core/request_list.html', context)
+
+def api_pending_jobs(request):
+    jobs = AssistanceRequest.objects.filter(status='Pending', mechanic__isnull=True).select_related('driver')
+    data = []
+    for job in jobs:
+        data.append({
+            'id': job.id,
+            'issue_type': job.issue_type,
+            'driver_name': f"{job.driver.first_name} {job.driver.last_name}",
+            'driver_phone': getattr(job.driver, 'phone_number', 'N/A'),
+            'latitude': job.latitude,
+            'longitude': job.longitude,
+            'created_at': "Just now" 
+        })
+    return JsonResponse({'pending_jobs': data})
+
+def get_nearby_mechanics(request):
+    driver_lat = request.GET.get('lat')
+    driver_lng = request.GET.get('lng')
+
+    if not driver_lat or not driver_lng:
+        return JsonResponse({'status': 'error', 'message': 'Missing location data'}, status=400)
+
+    mechanics = MechanicProfile.objects.filter(
+        current_lat__isnull=False, 
+        current_lng__isnull=False
+    )
+    
+    mechanic_list = []
+    for m in mechanics:
+        mechanic_list.append({
+            'id': m.id,
+            'shop_name': getattr(m, 'shop_name', f"{m.user.username}'s Garage"),
+            'latitude': float(m.current_lat),
+            'longitude': float(m.current_lng),
+        })
+
+    return JsonResponse({'status': 'success', 'mechanics': mechanic_list})
+
+@login_required
+def battery_jumpstart_options_view(request):
+    return render(request, 'core/battery_jumpstart.html')
+
+@login_required
+def battery_jumpstart_request_view(request):
+    tier = request.GET.get('tier', 'jumpstart')
+    
+    pricing_map = {
+        'jumpstart': {'name': 'Standard Jumpstart', 'price': 45},
+        'replacement': {'name': 'New Battery & Install', 'price': 140},
+    }
+    
+    selected_service = pricing_map.get(tier, pricing_map['jumpstart'])
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        location = request.POST.get('location')
+        notes = request.POST.get('notes', '')
+        
+        full_description = (
+            f"Service Type: {selected_service['name']}\n"
+            f"Estimated Base Cost: ${selected_service['price']}\n"
+            f"Location: {location}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        # Use 'Dead Battery' to map directly to your ISSUE_CHOICES
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Dead Battery',
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=0.0,
+            longitude=0.0,
+            status='Pending'
+        )
+        
+        return redirect('driver_requests')
+
+    context = {
+        'selected_service': selected_service,
+        'tier': tier,
+        'vehicles': user_vehicles,
+    }
+    return render(request, 'core/battery_jumpstart_request.html', context)
+
+@login_required
+def fuel_delivery_options_view(request):
+    return render(request, 'core/fuel_delivery.html')
+
+@login_required
+def fuel_delivery_request_view(request):
+    tier = request.GET.get('tier', 'regular')
+    
+    # Distance-based pricing variables
+    BASE_FEE = 10.00      # Minimum fee just for dispatching
+    PER_KM_RATE = 1.50    # Cost per kilometer traveled
+    
+    pricing_map = {
+        'regular': {'name': 'Regular Unleaded', 'price_per_litre': 1.50},
+        'premium': {'name': 'Premium Unleaded', 'price_per_litre': 1.80},
+        'diesel': {'name': 'Diesel Fuel', 'price_per_litre': 1.60},
+    }
+    
+    selected_service = pricing_map.get(tier, pricing_map['regular'])
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        location = request.POST.get('location')
+        notes = request.POST.get('notes', '')
+        
+        # 1. Grab Fuel Amount
+        litres_str = request.POST.get('litres', '5')
+        try:
+            litres = float(litres_str)
+        except ValueError:
+            litres = 5.0
+            
+        # 2. Grab GPS Coordinates & Calculated Distance
+        lat_str = request.POST.get('latitude', '0.0')
+        lng_str = request.POST.get('longitude', '0.0')
+        distance_str = request.POST.get('distance', '0.0')
+        
+        try:
+            latitude = float(lat_str)
+            longitude = float(lng_str)
+            distance_km = float(distance_str)
+        except ValueError:
+            latitude = 0.0
+            longitude = 0.0
+            distance_km = 0.0
+            
+        # 3. Calculate Final Costs
+        fuel_cost = litres * selected_service['price_per_litre']
+        delivery_cost = BASE_FEE + (distance_km * PER_KM_RATE)
+        total_cost = fuel_cost + delivery_cost
+        
+        full_description = (
+            f"Service Type: {selected_service['name']}\n"
+            f"Fuel Requested: {litres} Litres\n"
+            f"Distance to Vehicle: {distance_km:.1f} km\n"
+            f"Estimated Total: ${total_cost:.2f} (Fuel: ${fuel_cost:.2f} | Delivery: ${delivery_cost:.2f})\n"
+            f"Location Notes: {location}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Out of Gas',
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=latitude,
+            longitude=longitude,
+            status='Pending'
+        )
+        
+        return redirect('driver_requests')
+
+    context = {
+        'selected_service': selected_service,
+        'base_fee': BASE_FEE,
+        'per_km_rate': PER_KM_RATE,
+        'tier': tier,
+        'vehicles': user_vehicles,
+    }
+    return render(request, 'core/fuel_delivery_request.html', context)

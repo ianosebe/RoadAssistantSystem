@@ -1,0 +1,16 @@
+{
+  "name": "Road Assist",
+  "short_name": "RoadAssist",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f8f9fa",
+  "theme_color": "#2563eb",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/static/images/RoadAssistant.png",
+      "sizes": "192x192 512x512",
+      "type": "image/png"
+    }
+  ]
+}

@@ -1,0 +1,123 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="d-flex flex-column position-relative overflow-hidden mx-auto shadow-lg" style="min-height: 100vh; width: 100%; max-width: 450px; background-color: #f8f9fa; padding-bottom: 80px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">
+    
+    <!-- Top Header Bar -->
+    <div class="bg-white p-3 shadow-sm d-flex align-items-center justify-content-between sticky-top" style="z-index: 10;">
+        <a href="{% url 'mechanic_home' %}" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+            <i class="fa-solid fa-arrow-left text-dark"></i>
+        </a>
+        <h5 class="fw-bolder text-dark mb-0 text-uppercase">{{ status_name }} JOBS</h5>
+        <div style="width: 40px;"></div> <!-- Spacer for alignment -->
+    </div>
+
+    <!-- Tab Navigation (Matches image_dd4d36.png with Active Blue Bubble) -->
+    <div class="px-3 pt-3">
+        <div class="bg-white rounded-4 shadow-sm d-flex justify-content-between p-1 border">
+            <a href="{% url 'request_list_by_status' 'pending' %}" 
+               class="text-decoration-none px-2 py-2 text-center flex-fill rounded-3 small fw-bold transition-all
+               {% if status_slug == 'pending' %}bg-primary text-white shadow-sm{% else %}text-muted{% endif %}">
+                Pending
+            </a>
+            <a href="{% url 'request_list_by_status' 'active' %}" 
+               class="text-decoration-none px-2 py-2 text-center flex-fill rounded-3 small fw-bold transition-all
+               {% if status_slug == 'active' %}bg-primary text-white shadow-sm{% else %}text-muted{% endif %}">
+                Active
+            </a>
+            <a href="{% url 'request_list_by_status' 'completed' %}" 
+               class="text-decoration-none px-2 py-2 text-center flex-fill rounded-3 small fw-bold transition-all
+               {% if status_slug == 'completed' %}bg-primary text-white shadow-sm{% else %}text-muted{% endif %}">
+                Completed
+            </a>
+            <a href="{% url 'request_list_by_status' 'cancelled' %}" 
+               class="text-decoration-none px-2 py-2 text-center flex-fill rounded-3 small fw-bold transition-all
+               {% if status_slug == 'cancelled' %}bg-primary text-white shadow-sm{% else %}text-muted{% endif %}">
+                Cancelled
+            </a>
+        </div>
+    </div>
+
+    <!-- Job Cards List Container -->
+    <div class="p-3 flex-grow-1">
+        {% if jobs %}
+            <div class="d-flex flex-column gap-3">
+                {% for job in jobs %}
+                <div class="card border-0 shadow-sm rounded-4 overflow-hidden position-relative">
+                    <div class="position-absolute top-0 bottom-0 start-0 
+                        {% if status_slug == 'pending' %}bg-warning
+                        {% elif status_slug == 'active' %}bg-primary
+                        {% elif status_slug == 'completed' %}bg-success
+                        {% else %}bg-secondary{% endif %}" style="width: 6px;">
+                    </div>
+                    
+                    <div class="card-body ps-4">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <h5 class="fw-bold text-dark mb-0">{{ job.issue_type }}</h5>
+                            <span class="badge 
+                                {% if status_slug == 'pending' %}bg-warning text-dark
+                                {% elif status_slug == 'active' %}bg-primary text-white
+                                {% elif status_slug == 'completed' %}bg-success text-white
+                                {% else %}bg-secondary text-white{% endif %} rounded-pill px-2 py-1" style="font-size: 0.65rem;">
+                                {{ status_name }}
+                            </span>
+                        </div>
+                        
+                        <p class="text-muted small mb-3"><i class="fa-regular fa-clock me-1"></i> Requested {{ job.created_at|timesince }} ago</p>
+                        
+                        <div class="bg-light p-3 rounded-3 mb-3 border border-light">
+                            <p class="text-dark small fw-semibold mb-1">
+                                <i class="fa-solid fa-user text-muted me-2" style="width: 16px;"></i> {{ job.driver.first_name }} {{ job.driver.last_name }}
+                            </p>
+                            <p class="text-dark small fw-semibold mb-0">
+                                <i class="fa-solid fa-phone text-muted me-2" style="width: 16px;"></i> <a href="tel:{{ job.driver.phone_number }}" class="text-decoration-none text-dark">{{ job.driver.phone_number }}</a>
+                            </p>
+                        </div>
+
+                        {% if status_slug == 'pending' %}
+                        <div class="d-flex gap-2">
+                            <form method="POST" action="{% url 'accept_job' job.id %}" class="flex-grow-1 m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-3 shadow-sm fs-7">ACCEPT</button>
+                            </form>
+                            <form method="POST" action="{% url 'reject_request' job.id %}" class="flex-grow-1 m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger w-100 fw-bold py-2 rounded-3 shadow-sm fs-7" onclick="return confirm('Reject this request?');">REJECT</button>
+                            </form>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-5 mt-5">
+                <div class="bg-white rounded-circle shadow-sm d-inline-flex align-items-center justify-content-center p-4 mb-3 text-muted">
+                    <i class="fa-solid fa-folder-open fs-1"></i>
+                </div>
+                <h6 class="fw-bold text-dark">No {{ status_name|lower }} jobs found</h6>
+                <p class="text-muted small">Check back later or view other categories.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="navbar fixed-bottom bg-white border-top shadow-lg py-2 px-4 rounded-top-4 mx-auto" style="z-index: 1040; max-width: 450px; right: 0; left: 0;">
+        <div class="container-fluid justify-content-around">
+            <a href="{% url 'mechanic_home' %}" class="text-decoration-none text-primary d-flex flex-column align-items-center">
+                <i class="fa-solid fa-house fs-5 mb-1"></i>
+                <span class="small fw-bold" style="font-size: 0.7rem;">Home</span>
+            </a>
+            <a href="{% url 'mechanic_activity' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-list-check fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Activity</span>
+            </a>
+            <a href="{% url 'mechanic_profile' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-user fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+</div>
+{% endblock %}

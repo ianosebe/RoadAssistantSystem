@@ -1,0 +1,102 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    :root {
+        --primary: #0088cc;
+        --secondary: #e6f7ff;
+        --white: #ffffff;
+    }
+    .pricing-card {
+        background-color: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #eaeaea;
+        transition: transform 0.3s ease;
+        height: 100%;
+    }
+    .pricing-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        border-color: var(--secondary);
+    }
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+    }
+</style>
+
+<div class="mobile-shell bg-light pb-5">
+    <div class="mobile-card">
+        
+        <!-- Sticky Header -->
+        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+            <div class="d-flex align-items-center max-w-md mx-auto">
+                <a href="{% url 'driver_services' %}" class="text-decoration-none text-primary fw-bold d-flex align-items-center gap-2">
+                    <i class="fi fi-rr-arrow-left fs-5"></i> Back to Services
+                </a>
+            </div>
+        </div>
+
+        <div class="container mt-4 max-w-md text-center">
+            <h1 class="h5 fw-bold text-dark mb-1">Select Fuel Type</h1>
+            <p class="text-muted small">We will deliver enough fuel to get you to the nearest station.</p>
+        </div>
+
+        <div class="container mt-3 max-w-md mb-5">
+            <div class="row g-3">
+                
+                <!-- Regular -->
+                <div class="col-12">
+                    <div class="pricing-card">
+                        <div class="icon-wrapper bg-primary bg-opacity-10 text-primary">
+                            <i class="fi fi-rr-gas-pump fs-1"></i>
+                        </div>
+                        <h2 class="card-title h6 fw-bold">Regular Unleaded</h2>
+                        <p class="card-desc text-muted small">Standard 87 octane gasoline. Includes 2 gallons of fuel and delivery fee.</p>
+                        <div class="price fs-3 fw-bold text-dark mb-3">$35 <span class="fs-6 text-muted fw-normal">/ total</span></div>
+                        <a href="{% url 'fuel_delivery_request' %}?tier=regular" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">Select Option</a>
+                    </div>
+                </div>
+
+                <!-- Premium -->
+                <div class="col-12">
+                    <div class="pricing-card">
+                        <div class="icon-wrapper bg-danger bg-opacity-10 text-danger">
+                            <i class="fi fi-rr-gas-pump fs-1"></i>
+                        </div>
+                        <h2 class="card-title h6 fw-bold">Premium Unleaded</h2>
+                        <p class="card-desc text-muted small">High-octane 91/93 fuel for luxury or performance vehicles. Includes 2 gallons.</p>
+                        <div class="price fs-3 fw-bold text-dark mb-3">$45 <span class="fs-6 text-muted fw-normal">/ total</span></div>
+                        <a href="{% url 'fuel_delivery_request' %}?tier=premium" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">Select Option</a>
+                    </div>
+                </div>
+
+                <!-- Diesel -->
+                <div class="col-12">
+                    <div class="pricing-card">
+                        <div class="icon-wrapper bg-success bg-opacity-10 text-success">
+                            <i class="fi fi-rr-gas-pump fs-1"></i>
+                        </div>
+                        <h2 class="card-title h6 fw-bold">Diesel Fuel</h2>
+                        <p class="card-desc text-muted small">Ultra-low sulfur diesel for trucks and diesel engine cars. Includes 2 gallons.</p>
+                        <div class="price fs-3 fw-bold text-dark mb-3">$50 <span class="fs-6 text-muted fw-normal">/ total</span></div>
+                        <a href="{% url 'fuel_delivery_request' %}?tier=diesel" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">Select Option</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

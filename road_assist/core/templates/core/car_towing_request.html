@@ -1,0 +1,58 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<div class="mobile-shell bg-light pb-5">
+    <div class="mobile-card">
+        <!-- Sticky Header -->
+        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+            <div class="d-flex align-items-center max-w-md mx-auto">
+                <a href="{% url 'car_towing' %}" class="text-decoration-none text-primary fw-bold d-flex align-items-center gap-2">
+                    <i class="fi fi-rr-arrow-left fs-5"></i> Back to Options
+                </a>
+            </div>
+        </div>
+
+        <div class="container mt-4 max-w-md">
+            <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
+                <span class="badge bg-primary bg-opacity-10 text-primary mb-2">Selected Service</span>
+                <h2 class="h5 fw-bold text-dark mb-1">{{ selected_service.name }}</h2>
+                <p class="text-dark fw-bold fs-4 mb-0">${{ selected_service.price }} <span class="fs-6 text-muted fw-normal">base fee</span></p>
+            </div>
+
+            <form method="POST" class="bg-white p-4 rounded-4 shadow-sm border">
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="vehicle_id" class="form-label fw-bold small text-muted">Select Vehicle</label>
+                    <select name="vehicle_id" id="vehicle_id" class="form-select rounded-3" required>
+                        <option value="" selected disabled>Choose your vehicle...</option>
+                        {% for vehicle in vehicles %}
+                            <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - Plate: {{ vehicle.license_plate }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label for="pickup_location" class="form-label fw-bold small text-muted">Pickup Location</label>
+                    <input type="text" class="form-control rounded-3" id="pickup_location" name="pickup_location" required>
+                </div>
+
+                <div class="mb-3">
+                    <label for="destination" class="form-label fw-bold small text-muted">Destination Dropoff</label>
+                    <input type="text" class="form-control rounded-3" id="destination" name="destination" required>
+                </div>
+
+                <div class="mb-4">
+                    <label for="notes" class="form-label fw-bold small text-muted">Additional Notes (Optional)</label>
+                    <textarea class="form-control rounded-3" id="notes" name="notes" rows="2" placeholder="Describe vehicle condition, key status, etc."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm">Confirm & Dispatch Request</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

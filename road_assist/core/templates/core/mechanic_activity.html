@@ -1,0 +1,235 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<style>
+    /* Smooth transition for tabs */
+    .tab-pane {
+        transition: opacity 0.3s ease-in-out;
+    }
+    /* Rating star styling */
+    .star-rating .fa-star {
+        color: #ffc107;
+    }
+    .star-rating .fa-star.empty {
+        color: #e4e5e9;
+    }
+</style>
+
+<div class="d-flex flex-column position-relative overflow-auto mx-auto shadow-lg" style="height: 100vh; width: 100%; max-width: 450px; background-color: #f8f9fa; padding-bottom: 80px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">    <!-- Header -->
+    <div class="bg-white p-4 shadow-sm position-sticky top-0" style="z-index: 1020; border-bottom-left-radius: 25px; border-bottom-right-radius: 25px;">
+        <h2 class="h4 fw-bolder text-dark mb-3">Activity Log</h2>
+        
+        <!-- Navigation Pills -->
+        <ul class="nav nav-pills nav-fill gap-2 p-1 bg-light border rounded-pill shadow-sm" id="activityTabs" role="tablist">
+            <li class="nav-item" role="presentation">
+                <button class="nav-link active rounded-pill fw-bold small" id="active-tab" data-bs-toggle="pill" data-bs-target="#active" type="button" role="tab">
+                    Active
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold small text-secondary" id="history-tab" data-bs-toggle="pill" data-bs-target="#history" type="button" role="tab">
+                    History
+                </button>
+            </li>
+            <li class="nav-item" role="presentation">
+                <button class="nav-link rounded-pill fw-bold small text-secondary" id="ratings-tab" data-bs-toggle="pill" data-bs-target="#ratings" type="button" role="tab">
+                    Ratings
+                </button>
+            </li>
+        </ul>
+    </div>
+
+    <!-- Tab Contents -->
+    <div class="tab-content p-3 mt-2" id="activityTabsContent">
+        
+        <!-- 1. Active Jobs Tab -->
+        <div class="tab-pane fade show active" id="active" role="tabpanel">
+            {% if active_jobs %}
+                {% for job in active_jobs %}
+                <div class="card border-0 shadow-sm rounded-4 mb-3 overflow-hidden border-start border-4 border-primary">
+                    <div class="card-body p-3">
+                        <div class="d-flex justify-content-between align-items-center mb-2">
+                            <span class="badge bg-primary bg-opacity-10 text-primary rounded-pill px-3 py-1 fw-bold">In Progress</span>
+                            <small class="text-muted fw-semibold">{{ job.accepted_at|timesince }} ago</small>
+                        </div>
+                        <h5 class="fw-bold text-dark mb-1">{{ job.issue_type }}</h5>
+                        
+                        <div class="d-flex align-items-center mt-3 bg-light p-2 rounded-3">
+                            <div class="bg-white rounded-circle d-flex justify-content-center align-items-center shadow-sm me-3" style="width: 40px; height: 40px;">
+                                <i class="fa-solid fa-user text-secondary"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-semibold text-dark fs-6">{{ job.driver.first_name }} {{ job.driver.last_name }}</p>
+                                <a href="tel:{{ job.driver.phone_number }}" class="text-decoration-none small text-primary fw-bold">
+                                    <i class="fa-solid fa-phone me-1"></i> Call Driver
+                                </a>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mt-3">
+                            <button class="btn btn-outline-primary w-50 fw-bold rounded-3">Navigate</button>
+                            <!-- Assuming you have a complete job URL -->
+                            <form action="{% url 'complete_job' job.id %}" method="POST" class="w-50 m-0">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3 shadow-sm">Complete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <!-- Empty State for Active -->
+                <div class="d-flex flex-column align-items-center justify-content-center text-center mt-5 pt-5">
+                    <div class="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-car-side fs-1 text-primary"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">No Active Jobs</h5>
+                    <p class="text-muted small w-75">You are not currently working on any requests. Check your home map to accept new jobs.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 2. History Tab -->
+        <div class="tab-pane fade" id="history" role="tabpanel">
+            {% if history_jobs %}
+                <div class="list-group list-group-flush gap-2">
+                    {% for job in history_jobs %}
+                    <div class="list-group-item border-0 bg-white shadow-sm rounded-4 p-3 d-flex flex-column gap-2">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <h6 class="fw-bold text-dark mb-0">{{ job.issue_type }}</h6>
+                            {% if job.status == 'COMPLETED' %}
+                                <span class="badge bg-success bg-opacity-10 text-success rounded-pill px-2 py-1"><i class="fa-solid fa-check me-1"></i> Done</span>
+                            {% elif job.status == 'CANCELLED' %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary rounded-pill px-2 py-1">Cancelled</span>
+                            {% endif %}
+                        </div>
+                        <div class="d-flex justify-content-between align-items-end mt-1">
+                            <div>
+                                <small class="text-muted d-block mb-1"><i class="fa-solid fa-calendar-day me-1"></i> {{ job.created_at|date:"M d, Y" }}</small>
+                                <small class="text-muted d-block"><i class="fa-solid fa-user me-1"></i> {{ job.driver.first_name }}</small>
+                            </div>
+                            {% if job.price %}
+                            <h5 class="fw-bolder text-success mb-0">KES {{ job.price }}</h5>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State for History -->
+                <div class="d-flex flex-column align-items-center justify-content-center text-center mt-5 pt-5">
+                    <div class="bg-secondary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa-solid fa-folder-open fs-1 text-secondary"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">No History Yet</h5>
+                    <p class="text-muted small w-75">Your completed and cancelled jobs will appear here.</p>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- 3. Ratings Tab -->
+        <div class="tab-pane fade" id="ratings" role="tabpanel">
+            
+            <!-- Overall Rating Summary Card -->
+            <div class="card border-0 shadow-sm rounded-4 mb-4 bg-dark text-white">
+                <div class="card-body p-4 d-flex justify-content-between align-items-center">
+                    <div>
+                        <h6 class="text-white-50 mb-1">Overall Rating</h6>
+                        <h2 class="fw-bolder mb-0">{{ average_rating|default:"0.0" }} <span class="fs-5 text-warning"><i class="fa-solid fa-star"></i></span></h2>
+                    </div>
+                    <div class="text-end">
+                        <h3 class="fw-bolder mb-0">{{ total_reviews|default:"0" }}</h3>
+                        <small class="text-white-50">Total Reviews</small>
+                    </div>
+                </div>
+            </div>
+
+            <h6 class="fw-bold text-secondary mb-3 ms-1">Client Feedback</h6>
+
+            {% if reviews %}
+                <div class="d-flex flex-column gap-3">
+                    {% for review in reviews %}
+                    <div class="card border-0 shadow-sm rounded-4 bg-white">
+                        <div class="card-body p-3">
+                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                <div class="d-flex gap-2 align-items-center">
+                                    <div class="bg-light rounded-circle d-flex justify-content-center align-items-center fw-bold text-primary" style="width: 35px; height: 35px; font-size: 0.8rem;">
+                                        {{ review.driver.first_name|slice:":1"|upper }}
+                                    </div>
+                                    <div>
+                                        <h6 class="fw-bold text-dark mb-0 fs-6">{{ review.driver.first_name }}</h6>
+                                        <small class="text-muted" style="font-size: 0.7rem;">{{ review.created_at|date:"M d, Y" }}</small>
+                                    </div>
+                                </div>
+                                <div class="star-rating small">
+                                    <!-- Dynamic star rendering (assuming 5 stars max) -->
+                                    <i class="fa-solid fa-star {% if review.rating < 1 %}empty{% endif %}"></i>
+                                    <i class="fa-solid fa-star {% if review.rating < 2 %}empty{% endif %}"></i>
+                                    <i class="fa-solid fa-star {% if review.rating < 3 %}empty{% endif %}"></i>
+                                    <i class="fa-solid fa-star {% if review.rating < 4 %}empty{% endif %}"></i>
+                                    <i class="fa-solid fa-star {% if review.rating < 5 %}empty{% endif %}"></i>
+                                </div>
+                            </div>
+                            {% if review.comment %}
+                            <p class="text-dark small mb-0 mt-2 bg-light p-2 rounded-3 fst-italic">"{{ review.comment }}"</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <!-- Empty State for Ratings -->
+                <div class="d-flex flex-column align-items-center justify-content-center text-center mt-4">
+                    <div class="bg-warning bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center mb-3" style="width: 80px; height: 80px;">
+                        <i class="fa-regular fa-star fs-1 text-warning"></i>
+                    </div>
+                    <h5 class="fw-bold text-dark">No Ratings Yet</h5>
+                    <p class="text-muted small w-75">Complete jobs to start receiving feedback and ratings from drivers.</p>
+                </div>
+            {% endif %}
+        </div>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="navbar fixed-bottom bg-white border-top shadow-lg py-2 px-4 rounded-top-4 mx-auto" style="z-index: 1040; max-width: 450px; right: 0; left: 0;">        <div class="container-fluid justify-content-around">
+            <!-- Home is now muted -->
+            <a href="{% url 'mechanic_home' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-house fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Home</span>
+            </a>
+            <!-- Activity is now Primary (Active) -->
+            <a href="{% url 'mechanic_activity' %}" class="text-decoration-none text-primary d-flex flex-column align-items-center">
+                <i class="fa-solid fa-list-check fs-5 mb-1"></i>
+                <span class="small fw-bold" style="font-size: 0.7rem;">Activity</span>
+            </a>
+            <!-- Profile remains muted -->
+            <a href="{% url 'mechanic_profile' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-user fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+</div>
+
+<!-- Script to handle Bootstrap pill active state toggling colors -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const tabs = document.querySelectorAll('#activityTabs .nav-link');
+        
+        tabs.forEach(tab => {
+            tab.addEventListener('show.bs.tab', function (event) {
+                // Reset all tabs to secondary
+                tabs.forEach(t => {
+                    t.classList.remove('text-primary');
+                    t.classList.add('text-secondary');
+                });
+                
+                // Set the newly active tab to inherit default active styling (removes text-secondary)
+                event.target.classList.remove('text-secondary');
+            });
+        });
+    });
+</script>
+{% endblock %}

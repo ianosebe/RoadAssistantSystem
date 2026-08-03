@@ -1,16 +1,10 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
 <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
 
 <style>
-    .custom-bounce {
-        animation: customBounce 2s infinite;
-    }
-    @keyframes customBounce {
-        0%, 100% { transform: translateY(-25%); animation-timing-function: cubic-bezier(0.8, 0, 1, 1); }
-        50% { transform: translateY(0); animation-timing-function: cubic-bezier(0, 0, 0.2, 1); }
-    }
     .custom-pulse {
         animation: customPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
@@ -51,6 +45,25 @@
         max-width: 450px;
     }
 
+    /* Bottom Sheet Draggable Styles */
+    #bottom-sheet {
+        transition: transform 0.3s cubic-bezier(0.25, 1, 0.5, 1);
+        will-change: transform;
+    }
+    #bottom-sheet.dragging {
+        transition: none;
+    }
+    #drag-handle-area {
+        cursor: grab;
+        padding-top: 15px;
+        padding-bottom: 15px;
+        margin-top: -15px;
+        touch-action: none;
+    }
+    #drag-handle-area:active {
+        cursor: grabbing;
+    }
+
     @media (max-width: 420px) {
         .driver-home-shell {
             border-radius: 0;
@@ -79,7 +92,7 @@
     {% if messages %}
     <div class="position-absolute w-100 px-3 mt-5" style="top: 0; z-index: 1040; pointer-events: none;">
         {% for message in messages %}
-            <div class="alert alert-success border border-2 border-success shadow-sm rounded-4 custom-bounce d-flex align-items-center" role="alert" style="pointer-events: auto;">
+            <div class="alert alert-success border border-2 border-success shadow-sm rounded-4 d-flex align-items-center auto-dismiss-alert" role="alert" style="pointer-events: auto; transition: opacity 0.5s ease-out;">
                 <span class="fw-bold">{{ message }}</span>
             </div>
         {% endfor %}
@@ -88,13 +101,6 @@
 
     <div class="position-absolute top-0 start-0 w-100 h-100 z-0 bg-secondary">
         <div id="map" class="w-100 h-100"></div>
-        
-        <div class="position-absolute top-50 start-50 translate-middle d-flex flex-column align-items-center" style="z-index: 10; pointer-events: none; margin-top: -24px;">
-            <div class="bg-primary text-white rounded-circle border border-4 border-white shadow-lg d-flex align-items-center justify-content-center custom-bounce" style="width: 3.5rem; height: 3.5rem;">
-                <i class="fa-solid fa-car fs-4"></i>
-            </div>
-            <div class="bg-dark rounded-circle opacity-25 mt-1" style="width: 0.5rem; height: 0.5rem; filter: blur(2px);"></div>
-        </div>
     </div>
 
     <div class="position-absolute top-0 start-0 w-100 p-3 top-bar d-flex justify-content-between align-items-center" style="z-index: 20; background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);">
@@ -107,34 +113,76 @@
         </div>
     </div>
 
+    <!-- Inside driver_home.html -->
     {% if not active_job %}
-    
-    <div class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
-        <div class="bg-secondary opacity-25 rounded-pill mx-auto mb-4" style="width: 48px; height: 6px;"></div>
+    <div id="bottom-sheet" class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
+        
+        <div id="drag-handle-area" class="d-flex justify-content-center w-100">
+            <div class="bg-secondary opacity-25 rounded-pill mb-2" style="width: 48px; height: 6px;"></div>
+        </div>
         
         <h3 class="h4 fw-bold text-dark mb-1">Need Assistance?</h3>
-        <p class="text-muted small mb-4">Select your problem to find mechanics near you.</p>
+        <p class="text-muted small mb-3">Select your vehicle and problem to find mechanics near you.</p>
 
+       <!-- VEHICLE SELECTION BLOCK -->
+            <div class="bg-light p-3 rounded-4 mb-3 border border-secondary border-opacity-10 max-w-md mx-auto">
+                {% if vehicles %}
+                    <label class="form-label small fw-bold text-secondary mb-1"><i class="fa-solid fa-car me-1"></i> Which car are you driving?</label>
+                    <select id="master-vehicle-select" class="form-select border-0 shadow-sm rounded-3 py-2 fw-semibold text-dark">
+                        {% for vehicle in vehicles %}
+                            <option value="{{ vehicle.id }}">
+                                {% firstof vehicle.plate_number vehicle.registration_number vehicle.license_plate "No Plate"|upper %} 
+                                — 
+                                {% firstof vehicle.brand vehicle.make vehicle.model "Vehicle"|title %}
+                            </option>
+                        {% endfor %}
+                    </select>
+                {% else %}
+                    <label class="form-label small fw-bold text-secondary mb-2"><i class="fa-solid fa-car-on me-1"></i> Temporary Vehicle Details</label>
+                    <div class="row g-2">
+                        <div class="col-7">
+                            <input type="text" id="master-custom-make" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2" placeholder="e.g. Toyota Fielder" required>
+                        </div>
+                        <div class="col-5">
+                            <input type="text" id="master-custom-plate" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2 text-uppercase" placeholder="KXX 123X" required>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>  
+         <!-- ASSISTANCE BUTTONS GRID -->
         <div class="row g-3 max-w-md mx-auto">
+            <!-- Button 1: Car Wont Start -->
             <div class="col-6">
-                <form action="{% url 'request_assistance' %}" method="POST" class="h-100">
+                <form action="{% url 'request_assistance' %}" method="POST" class="h-100 assistance-submit-form">
                     {% csrf_token %}
                     <input type="hidden" name="issue_type" value="Car Wont Start">
                     <input type="hidden" name="latitude" class="lat-input" value="">
                     <input type="hidden" name="longitude" class="lng-input" value="">
+                    
+                    <!-- Dynamic Hidden Vehicle Inputs -->
+                    <input type="hidden" name="vehicle_id" class="form-vehicle-id" value="">
+                    <input type="hidden" name="custom_make" class="form-custom-make" value="">
+                    <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
+
                     <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25">
                         <i class="fa-solid fa-car-battery fs-2 mb-2 text-primary"></i>
-                        <span class="fw-bold small text-dark">Car Won't Start</span>
+                        <span class="fw-bold small text-dark">Engine failure</span>
                     </button>
                 </form>
             </div>
 
+            <!-- Button 2: Flat Tire -->
             <div class="col-6">
-                <form action="{% url 'request_assistance' %}" method="POST" class="h-100">
+                <form action="{% url 'request_assistance' %}" method="POST" class="h-100 assistance-submit-form">
                     {% csrf_token %}
                     <input type="hidden" name="issue_type" value="Flat Tire">
                     <input type="hidden" name="latitude" class="lat-input" value="">
                     <input type="hidden" name="longitude" class="lng-input" value="">
+                    
+                    <input type="hidden" name="vehicle_id" class="form-vehicle-id" value="">
+                    <input type="hidden" name="custom_make" class="form-custom-make" value="">
+                    <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
+
                     <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25">
                         <i class="fa-solid fa-compact-disc fs-2 mb-2 text-primary"></i>
                         <span class="fw-bold small text-dark">Flat Tire</span>
@@ -142,12 +190,18 @@
                 </form>
             </div>
 
+            <!-- Button 3: Smoke or Noise -->
             <div class="col-6">
-                <form action="{% url 'request_assistance' %}" method="POST" class="h-100">
+                <form action="{% url 'request_assistance' %}" method="POST" class="h-100 assistance-submit-form">
                     {% csrf_token %}
                     <input type="hidden" name="issue_type" value="Smoke or Noise">
                     <input type="hidden" name="latitude" class="lat-input" value="">
                     <input type="hidden" name="longitude" class="lng-input" value="">
+                    
+                    <input type="hidden" name="vehicle_id" class="form-vehicle-id" value="">
+                    <input type="hidden" name="custom_make" class="form-custom-make" value="">
+                    <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
+
                     <button type="submit" class="btn btn-outline-warning w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-warning bg-warning bg-opacity-10 shadow-sm border-opacity-50">
                         <i class="fa-solid fa-triangle-exclamation fs-2 mb-2 text-warning"></i>
                         <span class="fw-bold small text-dark">Smoke / Noise</span>
@@ -155,15 +209,21 @@
                 </form>
             </div>
 
+            <!-- Button 4: Unknown Request -->
             <div class="col-6">
-                <form action="{% url 'request_assistance' %}" method="POST" class="h-100">
+                <form action="{% url 'request_assistance' %}" method="POST" class="h-100 assistance-submit-form">
                     {% csrf_token %}
                     <input type="hidden" name="issue_type" value="Unknown Triage Request">
                     <input type="hidden" name="latitude" class="lat-input" value="">
                     <input type="hidden" name="longitude" class="lng-input" value="">
+                    
+                    <input type="hidden" name="vehicle_id" class="form-vehicle-id" value="">
+                    <input type="hidden" name="custom_make" class="form-custom-make" value="">
+                    <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
+
                     <button type="submit" class="btn btn-outline-danger w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-danger bg-danger bg-opacity-10 shadow-sm border-opacity-50">
                         <i class="fa-solid fa-circle-question fs-2 mb-2 text-danger custom-pulse"></i>
-                        <span class="fw-bold small text-danger">I'm Not Sure</span>
+                        <span class="fw-bold small text-danger">Help</span>
                     </button>
                 </form>
             </div>
@@ -185,8 +245,10 @@
 
     <div id="accepted-screen" class="position-absolute bottom-0 start-50 translate-middle-x w-100 px-3 {% if active_job.status == 'Pending' %}d-none{% endif %}" style="max-width: 400px; z-index: 20; padding-bottom: 90px;">
         <div class="bg-white rounded-4 shadow-lg border overflow-hidden">
-            <div class="bg-success text-white text-center py-2 fw-bold small shadow-sm d-flex justify-content-center align-items-center">
-                <i class="fa-solid fa-circle-check me-2"></i> Mechanic on the way!
+            <!-- Enhanced Header with Distance & ETA Badge -->
+            <div class="bg-success text-white text-center py-2 px-3 fw-bold small shadow-sm d-flex justify-content-between align-items-center">
+                <span><i class="fa-solid fa-circle-check me-2"></i> Mechanic on the way!</span>
+                <span class="badge bg-white text-success px-2 py-1 rounded-pill" id="eta-badge">Calculating...</span>
             </div>
             
             <div class="p-4 d-flex justify-content-between align-items-center">
@@ -217,112 +279,141 @@
                 </div>
             
             <form id="chat-form" onsubmit="sendMessage(event)" class="position-relative mt-auto border-top pt-3">
-                <input type="text" id="chat-input" class="form-control rounded-pill pe-5 py-2 border-secondary border-opacity-25 bg-light" placeholder="Message..." autocomplete="off">
-                <button type="submit" class="btn btn-primary rounded-circle position-absolute top-50 translate-middle-y end-0 mt-3 me-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px; padding: 0;">
+                <input type="text" id="chat-input" class="form-control rounded-pill pe-5 py-2 border-secondary border-opacity-25 bg-light" placeholder="Type a message..." autocomplete="off">
+                <button type="submit" class="btn btn-primary rounded-circle position-absolute end-0 top-50 translate-middle-y me-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
                     <i class="fa-solid fa-paper-plane small"></i>
                 </button>
             </form>
         </div>
     </div>
 
-    <script>
-        // 1. POLLING SCRIPT (Checks if mechanic accepted)
-        const checkInterval = setInterval(() => {
-            fetch('/api/check-job-status/')
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'Accepted') {
-                        clearInterval(checkInterval);
-                        document.getElementById('waiting-screen').classList.add('d-none');
-                        document.getElementById('accepted-screen').classList.remove('d-none');
-                        document.getElementById('mechanic-name').innerText = data.mechanic_name;
-                        document.getElementById('mechanic-phone').innerText = data.mechanic_phone;
-                    } else if (data.status === 'None') {
-                        window.location.reload();
+<script>
+    const jobId = "{{ active_job.id }}"; 
+    const driverLat = parseFloat("{{ active_job.latitude|default:'0' }}");
+    const driverLng = parseFloat("{{ active_job.longitude|default:'0' }}");
+
+    // Haversine formula for distance calculation in kilometers
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+            Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+    }
+
+    if (jobId && jobId !== "None") {
+    const checkInterval = setInterval(() => {
+        fetch(`/api/check-job-status/${jobId}/`) 
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'Accepted' || data.status === 'active') { 
+                    document.getElementById('waiting-screen').classList.add('d-none');
+                    document.getElementById('accepted-screen').classList.remove('d-none');
+                    document.getElementById('mechanic-name').innerText = data.mechanic_name || 'Mechanic';
+                    document.getElementById('mechanic-phone').innerText = data.mechanic_phone || '';
+
+                    // Dynamically pull latest driver coordinates from the map marker
+                    const currentDriverLat = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lat() : parseFloat("{{ active_job.latitude|default:'0' }}");
+                    const currentDriverLng = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lng() : parseFloat("{{ active_job.longitude|default:'0' }}");
+
+                    // Calculate and display distance & ETA if mechanic coordinates are available in the API response
+                    if (data.mechanic_lat && data.mechanic_lng) {
+                        const distanceKm = calculateDistance(parseFloat(data.mechanic_lat), parseFloat(data.mechanic_lng), currentDriverLat, currentDriverLng);
+                        const averageSpeedKmh = 40; // Estimated urban speed
+                        const timeMinutes = Math.max(Math.round((distanceKm / averageSpeedKmh) * 60), 1);
+                        document.getElementById('eta-badge').textContent = `${distanceKm.toFixed(1)} km (~${timeMinutes}m)`;
+                    } else {
+                        document.getElementById('eta-badge').textContent = 'Tracking unavailable';
                     }
-                })
-                .catch(err => console.error('Error:', err));
-        }, 3000);
-
-        // 2. CHAT SCRIPTS (Using Bootstrap Offcanvas API)
-        const jobId = "{{ active_job.id }}"; 
-        let chatOffcanvas;
-
-        document.addEventListener("DOMContentLoaded", function() {
-            const chatEl = document.getElementById('chatSidebar');
-            if (chatEl) {
-                chatOffcanvas = new bootstrap.Offcanvas(chatEl);
-                
-                // Start polling when chat is opened
-                chatEl.addEventListener('show.bs.offcanvas', function () {
-                    fetchMessages();
-                    window.chatInterval = setInterval(fetchMessages, 3000);
-                });
-                
-                // Stop polling when chat is closed
-                chatEl.addEventListener('hide.bs.offcanvas', function () {
-                    clearInterval(window.chatInterval);
-                });
-            }
-        });
-
-        function toggleChat() {
-            if (chatOffcanvas) chatOffcanvas.toggle();
-        }
-
-        function fetchMessages() {
-            if (!jobId || jobId === "None") return;
-            fetch(`/api/job/${jobId}/messages/`)
-                .then(res => res.json())
-                .then(data => {
-                    if (data.status === 'success') {
-                        const chatBox = document.getElementById('chat-messages');
-                        chatBox.innerHTML = ''; 
-                        
-                        data.messages.forEach(msg => {
-                            const isMine = msg.is_mine;
-                            const alignmentClass = isMine ? 'align-items-end' : 'align-items-start';
-                            const bubbleClass = isMine ? 'bg-primary text-white chat-bubble-mine' : 'bg-light text-dark border chat-bubble-theirs';
-                            
-                            const bubbleHTML = `
-                                <div class="d-flex flex-column ${alignmentClass} w-100 mb-1">
-                                    <div class="px-3 py-2 small shadow-sm ${bubbleClass}" style="max-width: 85%;">
-                                        ${msg.content}
-                                    </div>
-                                    <span class="text-muted mt-1 px-1" style="font-size: 0.65rem;">${msg.timestamp}</span>
-                                </div>
-                            `;
-                            chatBox.insertAdjacentHTML('beforeend', bubbleHTML);
-                        });
-                        chatBox.scrollTop = chatBox.scrollHeight;
-                    }
-                });
-        }
-
-        function sendMessage(event) {
-            event.preventDefault(); 
-            const input = document.getElementById('chat-input');
-            const content = input.value.trim();
-            if (!content) return;
-
-            const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-            fetch(`/api/job/${jobId}/send-message/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': csrfToken
-                },
-                body: JSON.stringify({ content: content })
+                } else if (data.status === 'Cancelled' || data.status === 'None') {
+                    clearInterval(checkInterval);
+                    window.location.reload();
+                }
             })
+            .catch(err => console.error('Error checking status:', err));
+    }, 3000); 
+}
+
+    let chatOffcanvas;
+
+    document.addEventListener("DOMContentLoaded", function() {
+        const chatEl = document.getElementById('chatSidebar');
+        if (chatEl) {
+            chatOffcanvas = new bootstrap.Offcanvas(chatEl);
+            
+            chatEl.addEventListener('show.bs.offcanvas', function () {
+                fetchMessages();
+                window.chatInterval = setInterval(fetchMessages, 3000);
+            });
+            
+            chatEl.addEventListener('hide.bs.offcanvas', function () {
+                clearInterval(window.chatInterval);
+            });
+        }
+    });
+
+    function toggleChat() {
+        if (chatOffcanvas) chatOffcanvas.toggle();
+    }
+
+    function fetchMessages() {
+        if (!jobId || jobId === "None") return;
+        
+        fetch(`/api/job/${jobId}/messages/`)
             .then(res => res.json())
             .then(data => {
                 if (data.status === 'success') {
-                    input.value = ''; 
-                    fetchMessages(); 
+                    const chatBox = document.getElementById('chat-messages');
+                    chatBox.innerHTML = ''; 
+                    
+                    data.messages.forEach(msg => {
+                        const isMine = msg.is_mine;
+                        const alignmentClass = isMine ? 'align-items-end' : 'align-items-start';
+                        const bubbleClass = isMine ? 'bg-primary text-white chat-bubble-mine' : 'bg-light text-dark border chat-bubble-theirs';
+                        
+                        const bubbleHTML = `
+                            <div class="d-flex flex-column ${alignmentClass} w-100 mb-1">
+                                <div class="px-3 py-2 small shadow-sm ${bubbleClass}" style="max-width: 85%;">
+                                    ${msg.content}
+                                </div>
+                                <span class="text-muted mt-1 px-1" style="font-size: 0.65rem;">${msg.timestamp}</span>
+                            </div>
+                        `;
+                        chatBox.insertAdjacentHTML('beforeend', bubbleHTML);
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
                 }
             });
-        }
-    </script>
+    }
+
+    function sendMessage(event) {
+        event.preventDefault(); 
+        const input = document.getElementById('chat-input');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch(`/api/job/${jobId}/send-message/`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ content: content })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                input.value = ''; 
+                fetchMessages(); 
+            }
+        });
+    }
+</script>
     {% endif %}
 
     <nav class="position-fixed bottom-0 start-0 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
@@ -359,42 +450,212 @@
     </nav>
 </div>
 
+<!-- Bottom Sheet Logic -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const sheet = document.getElementById('bottom-sheet');
+        const handleArea = document.getElementById('drag-handle-area');
+        
+        if (!sheet || !handleArea) return;
+
+        let startY = 0;
+        let currentY = 0;
+        let isDragging = false;
+        
+        let sheetHeight = sheet.offsetHeight;
+        let maxTranslate = sheetHeight - 160; 
+
+        window.addEventListener('resize', () => {
+            sheetHeight = sheet.offsetHeight;
+            maxTranslate = sheetHeight - 160;
+        });
+
+        function getDragY(e) {
+            return e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
+        }
+
+        function onDragStart(e) {
+            isDragging = true;
+            startY = getDragY(e);
+            sheet.classList.add('dragging');
+        }
+
+        function onDragMove(e) {
+            if (!isDragging) return;
+            
+            const y = getDragY(e);
+            const deltaY = y - startY;
+            let newTranslate = currentY + deltaY;
+
+            if (newTranslate < 0) newTranslate = 0; 
+            if (newTranslate > maxTranslate) newTranslate = maxTranslate; 
+
+            sheet.style.transform = `translateY(${newTranslate}px)`;
+            if (e.cancelable) e.preventDefault(); 
+        }
+
+        function onDragEnd(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            sheet.classList.remove('dragging');
+
+            const y = e.type.includes('mouse') ? e.pageY : e.changedTouches[0].pageY;
+            const deltaY = y - startY;
+            currentY += deltaY;
+
+            if (currentY < 0) currentY = 0;
+            if (currentY > maxTranslate) currentY = maxTranslate;
+
+            if (currentY > maxTranslate / 2) {
+                currentY = maxTranslate; 
+            } else {
+                currentY = 0; 
+            }
+
+            sheet.style.transform = `translateY(${currentY}px)`;
+        }
+
+        handleArea.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDragMove, { passive: false });
+        document.addEventListener('mouseup', onDragEnd);
+
+        handleArea.addEventListener('touchstart', onDragStart, { passive: false });
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
+    });
+</script>
+
+<!-- Google Maps & Mechanics Fetch Logic -->
 <script>
     let map;
+    let driverMarker;
+    let mechanicMarkers = []; 
+
     function initMap() {
         const defaultLocation = { lat: -1.286389, lng: 36.817223 };
         
         map = new google.maps.Map(document.getElementById("map"), {
             center: defaultLocation,
-            zoom: 15,
+            zoom: 14,
             disableDefaultUI: true, 
             gestureHandling: "greedy", 
         });
 
-        function updateCoordinates() {
-            const center = map.getCenter();
-            const currentLat = center.lat();
-            const currentLng = center.lng();
-            
-            document.querySelectorAll('.lat-input').forEach(input => input.value = currentLat);
-            document.querySelectorAll('.lng-input').forEach(input => input.value = currentLng);
+        driverMarker = new google.maps.Marker({
+            position: defaultLocation,
+            map: map,
+            draggable: true, 
+            animation: google.maps.Animation.DROP,
+            title: "Your Breakdown Location"
+        });
+
+        function updateCoordinates(lat, lng) {
+            document.querySelectorAll('.lat-input').forEach(input => input.value = lat);
+            document.querySelectorAll('.lng-input').forEach(input => input.value = lng);
+            fetchNearbyMechanics(lat, lng);
         }
 
-        map.addListener("idle", updateCoordinates);
+        driverMarker.addListener("dragend", () => {
+            const pos = driverMarker.getPosition();
+            updateCoordinates(pos.lat(), pos.lng());
+        });
 
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     const userPos = { lat: position.coords.latitude, lng: position.coords.longitude };
                     map.setCenter(userPos);
-                    updateCoordinates();
+                    driverMarker.setPosition(userPos);
+                    updateCoordinates(userPos.lat, userPos.lng);
                 },
-                () => { updateCoordinates(); }
+                () => { 
+                    updateCoordinates(defaultLocation.lat, defaultLocation.lng); 
+                }
             );
         } else {
-            updateCoordinates();
+            updateCoordinates(defaultLocation.lat, defaultLocation.lng);
         }
     }
+
+    function fetchNearbyMechanics(lat, lng) {
+        fetch(`/api/nearby-mechanics/?lat=${lat}&lng=${lng}`)
+            .then(res => res.json())
+            .then(data => {
+                mechanicMarkers.forEach(marker => marker.setMap(null));
+                mechanicMarkers = [];
+
+                const mechanicIcon = {
+                    url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png",
+                    scaledSize: new google.maps.Size(40, 40)
+                };
+
+                data.mechanics.forEach(mech => {
+                    const marker = new google.maps.Marker({
+                        position: { lat: parseFloat(mech.latitude), lng: parseFloat(mech.longitude) },
+                        map: map,
+                        icon: mechanicIcon,
+                        title: mech.shop_name || "Mechanic Workshop"
+                    });
+
+                    const infoWindow = new google.maps.InfoWindow({
+                        content: `<div class="p-1"><b class="text-dark">${mech.shop_name || 'Mechanic Shop'}</b><br><span class="text-muted small">Active Workshop</span></div>`
+                    });
+
+                    marker.addListener("click", () => {
+                        infoWindow.open(map, marker);
+                    });
+
+                    mechanicMarkers.push(marker);
+                });
+            })
+            .catch(err => console.error("Error loading nearby workshops:", err));
+    }
 </script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY_HERE&callback=initMap"></script>
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe4GU6oLqQ07M5WCL_EJGUZZmDpsovugg&callback=initMap"></script>
+
+<!-- Auto-dismiss alerts script -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const alerts = document.querySelectorAll('.auto-dismiss-alert');
+        
+        alerts.forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0'; 
+                setTimeout(() => { alert.remove(); }, 500); 
+            }, 4000); 
+        });
+    });
+</script>
+
+<!-- VEHICLE SYNC SCRIPT -->
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const assistanceForms = document.querySelectorAll('.assistance-submit-form');
+        
+        assistanceForms.forEach(form => {
+            form.addEventListener('submit', function() {
+                const masterSelect = document.getElementById('master-vehicle-select');
+                if (masterSelect) {
+                    const vehicleIdInput = form.querySelector('.form-vehicle-id');
+                    if (vehicleIdInput) {
+                        vehicleIdInput.value = masterSelect.value;
+                    }
+                } else {
+                    const masterMake = document.getElementById('master-custom-make');
+                    const masterPlate = document.getElementById('master-custom-plate');
+                    
+                    const customMakeInput = form.querySelector('.form-custom-make');
+                    const customPlateInput = form.querySelector('.form-custom-plate');
+                    
+                    if (masterMake && customMakeInput) {
+                        customMakeInput.value = masterMake.value;
+                    }
+                    if (masterPlate && customPlateInput) {
+                        customPlateInput.value = masterPlate.value;
+                    }
+                }
+            });
+        });
+    });
+</script>
 {% endblock %}

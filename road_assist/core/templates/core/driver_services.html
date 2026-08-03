@@ -1,4 +1,5 @@
 {% extends 'core/base.html' %}
+{% load static %}
 
 {% block content %}
 <link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
@@ -10,197 +11,207 @@
     .service-container:active {
         transform: scale(0.96);
     }
-    .pulse-danger {
-        animation: dangerPulse 2s infinite;
+    .service-img-wrapper {
+        height: 75px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
-    @keyframes dangerPulse {
-        0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(220, 53, 69, 0.7); }
-        50% { transform: scale(1.03); box-shadow: 0 0 0 10px rgba(220, 53, 69, 0); }
+    .service-img-wrapper img {
+        max-height: 100%;
+        max-width: 100%;
+        object-fit: contain;
     }
 </style>
 
 <div class="mobile-shell bg-light pb-5">
     <div class="mobile-card">
         <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
-        <div class="d-flex justify-content-between align-items-center max-w-md mx-auto">
-            <div class="d-flex align-items-center gap-2">
-                <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
-                    {{ request.user.first_name|slice:":1"|upper }}
+            <div class="d-flex justify-content-between align-items-center max-w-md mx-auto">
+                <div class="d-flex align-items-center gap-2">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                        {{ request.user.first_name|slice:":1"|upper }}
+                    </div>
+                    <div>
+                        <span class="text-muted small d-block">Welcome back,</span>
+                        <h1 class="h6 fw-bold text-dark mb-0">{{ request.user.first_name }} {{ request.user.last_name }}</h1>
+                    </div>
                 </div>
-                <div>
-                    <span class="text-muted small d-block">Welcome back,</span>
-                    <h1 class="h6 fw-bold text-dark mb-0">{{ request.user.first_name }} {{ request.user.last_name }}</h1>
+                <button class="btn btn-light rounded-circle border p-2 position-relative" style="width: 40px; height: 40px;">
+                    <i class="fi fi-rr-bell text-secondary"></i>
+                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
+                </button>
+            </div>
+        </div>
+
+        <div class="container mt-3 max-w-md">
+            <div class="row g-2 align-items-stretch">
+                <!-- Roadside Protection Active -->
+                <div class="col-12 mt-2">
+                    <div class="bg-dark text-white p-3 rounded-4 d-flex align-items-center justify-content-between shadow-sm">
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
+                                <i class="fi fi-rr-shield-check fs-4"></i>
+                            </div>
+                            <div>
+                                <p class="mb-0 fw-bold small">Roadside Protection Active</p>
+                                <p class="text-muted mb-0 extra-small" style="font-size: 0.75rem;">Premium Member Plan</p>
+                            </div>
+                        </div>
+                        <i class="fi fi-rr-angle-small-right text-muted fs-4"></i>
+                    </div>
                 </div>
             </div>
-            <button class="btn btn-light rounded-circle border p-2 position-relative" style="width: 40px; height: 40px;">
-                <i class="fi fi-rr-bell text-secondary"></i>
-                <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
-            </button>
         </div>
-    </div>
 
-    <div class="container mt-3 max-w-md">
-        <div class="row g-2">
-             <div class="col-6">
-                <a href="{% url 'driver_requests' %}" class="text-decoration-none h-100 d-block">
-                    <div class="bg-white border text-dark p-3 rounded-4 shadow-sm h-100 d-flex flex-column justify-content-between">
-                        <div class="d-flex justify-content-between align-items-start">
-                            <i class="fi fi-rr-clock-rotate-left fs-4 text-secondary bg-light p-2 rounded-3"></i>
-                            <span class="badge bg-secondary rounded-pill">View All</span>
+        <div class="container mt-4 max-w-md mb-5">
+            <h4 class="h6 text-muted fw-bold mb-3 uppercase tracking-wider text-uppercase" style="font-size: 0.75rem;">Available Road Services</h4>
+            
+            <div class="row g-3 align-items-stretch">
+                <!-- Car Towing -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'car_towing' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-info bg-opacity-10 text-info rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <img src="{% static 'images/car_towing.png' %}" alt="Car Towing">
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Car Towing</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Breakdown/Accident move</p>
                         </div>
-                        <div class="mt-3">
-                            <h2 class="small text-muted fw-semibold mb-0">Past Requests</h2>
+                    </a>
+                </div>
+
+                <!-- Motorcycle Towing -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'motorcycle_towing' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <img src="{% static 'images/motorcycle_towing.png' %}" alt="Motorcycle Towing">
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Motorcycle Towing</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">On-site triage & support</p>
                         </div>
+                    </a>
+                </div>
+
+                <!-- Boat Towing -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'boat_towing' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-info bg-opacity-10 text-info rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <img src="{% static 'images/boat_towing.png' %}" alt="Boat Towing">
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Boat towing</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">On-site triage & support</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Battery Jumpstart -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'battery_jumpstart' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-warning bg-opacity-10 text-warning rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <img src="{% static 'images/battery_jumpstart.png' %}" alt="Battery Jumpstart">
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Battery Jumpstart</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Dead battery revival</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Tire Fixing/Swapping -->
+                <div class="col-6 d-flex">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="bg-success bg-opacity-10 text-success rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                <img src="{% static 'images/car_tire_fixation.png' %}" alt="Tire Fixing/Swapping">
+                            </div>
+                            <h5 class="fw-bold text-dark small mb-1">Tire Fixing/Swapping</h5>
+                        </div>
+                        <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Puncture replacement</p>
                     </div>
+                </div>
+
+                <!-- Fuel Delivery -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'fuel_delivery' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-danger bg-opacity-10 text-danger rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <img src="{% static 'images/Fuel_delivery.png' %}" alt="Fuel Delivery">
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Fuel Delivery</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Emergency gas delivery</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Locksmith Entry -->
+                <div class="col-6 d-flex">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="bg-primary bg-opacity-10 text-primary rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                <i class="fi fi-rr-key fs-2"></i>
+                            </div>
+                            <h5 class="fw-bold text-dark small mb-1">Locksmith Entry</h5>
+                        </div>
+                        <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Keys locked in vehicle</p>
+                    </div>
+                </div>
+
+                <!-- Car Maintenance -->
+                <div class="col-6 d-flex">
+                    <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                        <div>
+                            <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                <img src="{% static 'images/car_maintenance.png' %}" alt="Car Maintenance">
+                            </div>
+                            <h5 class="fw-bold text-dark small mb-1">Car Maintenance</h5>
+                        </div>
+                        <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Smoke, noise, triage check</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div style="height: 85px;"></div>
+
+        <nav class="position-fixed bottom-0 start-0 w-100 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
+            <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
+                <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                    <i class="fi fi-rr-home fs-4"></i>
+                    <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Home</div>
+                </a>
+                <a href="{% url 'driver_services' %}" class="text-decoration-none text-center text-danger w-100 transition">
+                    <i class="fi fi-rr-apps fs-4"></i>
+                    <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Services</div>
+                </a>
+                <a href="{% url 'driver_requests' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                    <div class="position-relative d-inline-block">
+                        <i class="fi fi-rr-calendar-lines fs-4"></i>
+                    </div>
+                    <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Requests</div>
+                </a>
+                <a href="{% url 'driver_vehicles' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                    <i class="fi fi-rr-car-side fs-4"></i>
+                    <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Vehicles</div>
+                </a>
+                <a href="{% url 'driver_settings' %}" class="text-decoration-none text-center text-secondary w-100 transition">
+                    <i class="fi fi-rr-user fs-4"></i>
+                    <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Profile</div>
                 </a>
             </div>
-
-            <div class="col-12 mt-2">
-                <div class="bg-dark text-white p-3 rounded-4 d-flex align-items-center justify-content-between shadow-sm">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="bg-warning text-dark rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
-                            <i class="fi fi-rr-shield-check fs-4"></i>
-                        </div>
-                        <div>
-                            <p class="mb-0 fw-bold small">Roadside Protection Active</p>
-                            <p class="text-muted mb-0 extra-small" style="font-size: 0.75rem;">Premium Member Plan</p>
-                        </div>
-                    </div>
-                    <i class="fi fi-rr-angle-small-right text-muted fs-4"></i>
-                </div>
-            </div>
-        </div>
+        </nav>
     </div>
-
-    <div class="container mt-4 max-w-md">
-        <div class="bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded-4 p-3 pulse-danger">
-            <div class="d-flex justify-content-between align-items-center">
-                <div>
-                    <h3 class="h6 fw-bold text-danger mb-1"><i class="fi fi-rr-exclamation me-2"></i>Extreme Emergency?</h3>
-                    <p class="text-secondary small mb-0">Instantly broadcast your live GPS to dispatchers.</p>
-                </div>
-                <button class="btn btn-danger rounded-pill px-3 fw-bold btn-sm shadow">SOS</button>
-            </div>
-        </div>
-    </div>
-
-    <div class="container mt-4 max-w-md mb-5">
-        <h4 class="h6 text-muted fw-bold mb-3 uppercase tracking-wider text-uppercase" style="font-size: 0.75rem;">Available Road Services</h4>
-        
-        <div class="row g-3">
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-info bg-opacity-10 text-info rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-truck-side fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Car Towing</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Breakdown/Accident move</p>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-car-crash fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Motorcycle Towing</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">On-site triage & support</p>
-                </div>
-            </div>
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-info bg-opacity-10 text-info rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-car-side fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Boat towing</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">On-site triage & support</p>
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-warning bg-opacity-10 text-warning rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-bolt fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Battery Jumpstart</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Dead battery revival</p>
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-success bg-opacity-10 text-success rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-car-side fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Tire Fix / Swap</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Puncture replacement</p>
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-danger bg-opacity-10 text-danger rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-gas-pump fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Fuel Delivery</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Emergency gas refill</p>
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-key fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Locksmith Entry</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Keys locked in vehicle</p>
-                </div>
-            </div>
-
-            <div class="col-6">
-                <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white">
-                    <div class="bg-secondary bg-opacity-10 text-secondary rounded-3 py-3 mx-auto mb-2 w-100">
-                        <i class="fi fi-rr-wrench fs-2"></i>
-                    </div>
-                    <h5 class="fw-bold text-dark small mb-1">Car Maintenance</h5>
-                    <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Smoke, noise, triage check</p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <div style="height: 85px;"></div>
-
-    <nav class="position-fixed bottom-0 start-0 w-100 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
-        <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
-            
-            <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-secondary w-100 transition">
-                <i class="fi fi-rr-home fs-4"></i>
-                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Home</div>
-            </a>
-
-            <a href="{% url 'driver_services' %}" class="text-decoration-none text-center text-danger w-100 transition">
-                <i class="fi fi-rr-apps fs-4"></i>
-                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Services</div>
-            </a>
-
-            <a href="{% url 'driver_requests' %}" class="text-decoration-none text-center text-secondary w-100 transition">
-                <div class="position-relative d-inline-block">
-                    <i class="fi fi-rr-calendar-lines fs-4"></i>
-                </div>
-                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Requests</div>
-            </a>
-
-            <a href="{% url 'driver_vehicles' %}" class="text-decoration-none text-center text-secondary w-100 transition">
-                <i class="fi fi-rr-car-side fs-4"></i>
-                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Vehicles</div>
-            </a>
-
-            <a href="{% url 'driver_settings' %}" class="text-decoration-none text-center text-secondary w-100 transition">
-                <i class="fi fi-rr-user fs-4"></i>
-                <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Profile</div>
-            </a>
-
-        </div>
-    </nav>
 </div>
 {% endblock %}

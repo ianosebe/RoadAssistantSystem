@@ -1,0 +1,195 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<style>
+    .settings-list-item {
+        transition: background-color 0.2s ease;
+    }
+    .settings-list-item:active {
+        background-color: #e9ecef !important;
+    }
+    .profile-avatar-wrapper {
+        position: relative;
+        display: inline-block;
+    }
+    .edit-avatar-btn {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background-color: #0d6efd;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid #ffffff;
+        cursor: pointer;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+</style>
+
+<div class="d-flex flex-column position-relative overflow-auto mx-auto shadow-lg" style="height: 100vh; width: 100%; max-width: 450px; background-color: #f8f9fa; padding-bottom: 90px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">    <!-- Top Header Background -->
+    <div class="bg-primary pt-5 pb-5 px-4 position-relative" style="border-bottom-left-radius: 30px; border-bottom-right-radius: 30px;">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="h4 fw-bolder text-white mb-0">My Profile</h2>
+            <!-- Mini Online Toggle -->
+            <div class="form-check form-switch d-flex flex-column align-items-end mb-0">
+                <input class="form-check-input bg-success border-success shadow-none mb-1" type="checkbox" role="switch" id="online-toggle" checked style="width: 2.5em; height: 1.25em;">
+                <label class="form-check-label small fw-bold text-white" for="online-toggle" style="font-size: 0.65rem;">ONLINE</label>
+            </div>
+        </div>
+    </div>
+
+    <!-- Profile Info Card (Overlapping Header) -->
+    <div class="container px-4" style="margin-top: -50px; z-index: 10;">
+        <div class="card border-0 shadow-sm rounded-4 bg-white text-center py-4">
+            <div class="card-body">
+                <div class="profile-avatar-wrapper mb-3">
+                    <div class="bg-primary text-white rounded-circle d-flex align-items-center justify-content-center fw-bolder shadow-sm mx-auto" style="width: 90px; height: 90px; font-size: 2.5rem;">
+                        {{ request.user.first_name|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}
+                    </div>
+                    <div class="edit-avatar-btn">
+                        <i class="fa-solid fa-camera" style="font-size: 0.75rem;"></i>
+                    </div>
+                </div>
+                
+                <h4 class="fw-bolder text-dark mb-1">{{ request.user.first_name }} {{ request.user.last_name }}</h4>
+                <p class="text-secondary small mb-2"><i class="fa-solid fa-phone me-1"></i> {{ request.user.phone_number|default:"+254 700 000000" }}</p>
+                
+                <div class="d-flex justify-content-center gap-2 mt-3">
+                    <span class="badge bg-warning bg-opacity-10 text-dark border border-warning rounded-pill px-3 py-2 fw-semibold">
+                        <i class="fa-solid fa-screwdriver-wrench me-1 text-warning"></i> {{ mechanic_profile.specialization|default:"Pro Mechanic" }}
+                    </span>
+                    <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3 py-2 fw-semibold">
+                        <i class="fa-solid fa-star me-1"></i> 4.8 Rating
+                    </span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings & Options List -->
+    <div class="container px-4 mt-4">
+        
+        <!-- Account Settings -->
+        <h6 class="fw-bold text-secondary mb-3 ms-2 small text-uppercase">Account Settings</h6>
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="list-group list-group-flush">
+                
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-primary" style="width: 40px; height: 40px;">
+                            <i class="fa-regular fa-user"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-semibold text-dark">Personal Information</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Update name, email, phone</small>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted small"></i>
+                </a>
+
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-warning" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-car-burst"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-semibold text-dark">Service Specialization</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">Manage skills and services offered</small>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted small"></i>
+                </a>
+
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-success" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-wallet"></i>
+                        </div>
+                        <div>
+                            <h6 class="mb-0 fw-semibold text-dark">Payment Details</h6>
+                            <small class="text-muted" style="font-size: 0.75rem;">M-Pesa numbers, bank accounts</small>
+                        </div>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted small"></i>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Preferences & Support -->
+        <h6 class="fw-bold text-secondary mb-3 ms-2 small text-uppercase">Preferences & Support</h6>
+        <div class="card border-0 shadow-sm rounded-4 bg-white overflow-hidden mb-4">
+            <div class="list-group list-group-flush">
+                
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-info" style="width: 40px; height: 40px;">
+                            <i class="fa-regular fa-bell"></i>
+                        </div>
+                        <h6 class="mb-0 fw-semibold text-dark">Push Notifications</h6>
+                    </div>
+                    <div class="form-check form-switch m-0">
+                        <input class="form-check-input shadow-none" type="checkbox" checked>
+                    </div>
+                </a>
+
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item border-bottom">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-circle-question"></i>
+                        </div>
+                        <h6 class="mb-0 fw-semibold text-dark">Help & Support</h6>
+                    </div>
+                    <i class="fa-solid fa-chevron-right text-muted small"></i>
+                </a>
+
+                <a href="#" class="list-group-item list-group-item-action d-flex align-items-center justify-content-between p-3 settings-list-item">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="bg-light rounded-circle d-flex align-items-center justify-content-center text-secondary" style="width: 40px; height: 40px;">
+                            <i class="fa-solid fa-shield-halved"></i>
+                        </div>
+                        <h6 class="mb-0 fw-semibold text-dark">Privacy Policy</h6>
+                    </div>
+                    <i class="fa-solid fa-arrow-up-right-from-square text-muted small"></i>
+                </a>
+
+            </div>
+        </div>
+
+        <!-- Logout Button -->
+        <form method="POST" action="{% url 'logout' %}" class="mb-4">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger w-100 fw-bold py-3 rounded-4 shadow-sm d-flex align-items-center justify-content-center gap-2" style="background-color: #dc3545 !important; color: #ffffff !important;">
+                <i class="fa-solid fa-right-from-bracket"></i> Log Out
+            </button>
+        </form>
+
+    </div>
+
+    <!-- Bottom Navigation Bar -->
+    <nav class="navbar fixed-bottom bg-white border-top shadow-lg py-2 px-4 rounded-top-4 mx-auto" style="z-index: 1040; max-width: 450px; right: 0; left: 0;">        <div class="container-fluid justify-content-around">
+            <!-- Home is muted -->
+            <a href="{% url 'mechanic_home' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-house fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Home</span>
+            </a>
+            <!-- Activity is muted -->
+            <a href="{% url 'mechanic_activity' %}" class="text-decoration-none text-muted d-flex flex-column align-items-center">
+                <i class="fa-solid fa-list-check fs-5 mb-1"></i>
+                <span class="small fw-semibold" style="font-size: 0.7rem;">Activity</span>
+            </a>
+            <!-- Profile is Primary (Active) -->
+            <a href="{% url 'mechanic_profile' %}" class="text-decoration-none text-primary d-flex flex-column align-items-center">
+                <i class="fa-solid fa-user fs-5 mb-1"></i>
+                <span class="small fw-bold" style="font-size: 0.7rem;">Profile</span>
+            </a>
+        </div>
+    </nav>
+
+</div>
+
+{% endblock %}

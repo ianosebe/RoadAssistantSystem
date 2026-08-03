@@ -118,6 +118,8 @@ class AssistanceRequest(models.Model):
     
     issue_type = models.CharField(max_length=50, choices=ISSUE_CHOICES)
     description = models.TextField(blank=True, null=True) 
+
+    vehicle = models.ForeignKey('Vehicle', on_delete=models.SET_NULL, null=True, blank=True)
     
     latitude = models.FloatField()
     longitude = models.FloatField()
@@ -223,3 +225,16 @@ class VerificationDocument(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.get_doc_type_display()}"
+
+
+
+class Review(models.Model):
+    assistance_request = models.OneToOneField(AssistanceRequest, on_delete=models.CASCADE, related_name='review')
+    driver = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_written')
+    mechanic = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='reviews_received')
+    rating = models.IntegerField(default=5) # 1 to 5 stars
+    comment = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Review for {self.mechanic.username} by {self.driver.username} - {self.rating}★"

@@ -25,11 +25,15 @@ SECRET_KEY = 'django-insecure-3)j&aixyrz!9-gi7-s&)9u5zj7w%h!-94_x_9)=k_q_k^pnox$
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []  # Change this to your domain in production
+ALLOWED_HOSTS = ['192.168.100.11', '127.0.0.1', 'localhost']
 
+CSRF_TRUSTED_ORIGINS = [
+    'http://192.168.100.11:8000',
+]
+
+SESSION_COOKIE_SECURE = False
 
 # Application definition
-
 INSTALLED_APPS = [
     "unfold",  # <-- CRITICAL: Must be at the very top!
     "unfold.contrib.filters",  # Optional: for gorgeous sidebar filters
@@ -84,7 +88,6 @@ TEMPLATES = [
     },
 ]
 
-
 WSGI_APPLICATION = 'road_assist.wsgi.application'
 
 
@@ -95,8 +98,8 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'road_assist_db',
-        'USER': 'IANO', # Your MySQL username
-        'PASSWORD': 'i@no2026', # Replace with your password
+        'USER': 'IANO', 
+        'PASSWORD': 'i@no2026', 
         'HOST': 'localhost',
         'PORT': '3306',
     }
@@ -135,25 +138,24 @@ USE_TZ = True
 
 AUTH_USER_MODEL = 'core.CustomUser'
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
+# Static files (CSS, JavaScript, Images)
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [
     os.path.join(BASE_DIR, 'static'),
 ]
-# ADD THESE LINES FOR UPLOADS:
-# The URL the browser will use to access the image
-MEDIA_URL = '/media/' 
 
-# The actual folder on your computer/server where the files will be saved
+# Media files setup
+MEDIA_URL = '/media/' 
 MEDIA_ROOT = BASE_DIR / 'media'
 
+
+# Unfold Admin Theme Config
 UNFOLD_CORE_CONFIG = {
     "SITE_TITLE": "Road Assist Admin",
     "SITE_HEADER": "Road Assist Control Center",
-    "SITE_SYMBOL": "shield-halved", # FontAwesome-style icon identifier for branding
-    "SHOW_HISTORY": True, # Gives a beautiful layout history of edits
+    "SITE_SYMBOL": "shield-halved",
+    "SHOW_HISTORY": True,
     "COLORS": {
         "primary": {
             "50": "239 246 255",
@@ -161,7 +163,7 @@ UNFOLD_CORE_CONFIG = {
             "200": "191 219 254",
             "300": "147 197 253",
             "400": "96 165 250",
-            "500": "37 99 235",   # This sets your main accent color (Sleek Blue!)
+            "500": "37 99 235", 
             "600": "29 78 216",
             "700": "30 64 175",
             "800": "30 58 138",
@@ -175,3 +177,8 @@ EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
 
 LOGIN_URL = 'login'
 LOGIN_REDIRECT_URL = 'driver_home'
+
+AUTHENTICATION_BACKENDS = [
+    'core.backends.EmailOrPhoneModelBackend',
+    'django.contrib.auth.backends.ModelBackend',
+]
