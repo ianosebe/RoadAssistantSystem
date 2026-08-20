@@ -63,6 +63,15 @@
     #drag-handle-area:active {
         cursor: grabbing;
     }
+    
+    /* Hover transitions for service buttons */
+    .service-btn-hover {
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .service-btn-hover:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+    }
 
     @media (max-width: 420px) {
         .driver-home-shell {
@@ -113,7 +122,6 @@
         </div>
     </div>
 
-    <!-- Inside driver_home.html -->
     {% if not active_job %}
     <div id="bottom-sheet" class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
         
@@ -124,32 +132,34 @@
         <h3 class="h4 fw-bold text-dark mb-1">Need Assistance?</h3>
         <p class="text-muted small mb-3">Select your vehicle and problem to find mechanics near you.</p>
 
-       <!-- VEHICLE SELECTION BLOCK -->
-            <div class="bg-light p-3 rounded-4 mb-3 border border-secondary border-opacity-10 max-w-md mx-auto">
-                {% if vehicles %}
-                    <label class="form-label small fw-bold text-secondary mb-1"><i class="fa-solid fa-car me-1"></i> Which car are you driving?</label>
-                    <select id="master-vehicle-select" class="form-select border-0 shadow-sm rounded-3 py-2 fw-semibold text-dark">
-                        {% for vehicle in vehicles %}
-                            <option value="{{ vehicle.id }}">
-                                {% firstof vehicle.plate_number vehicle.registration_number vehicle.license_plate "No Plate"|upper %} 
-                                — 
-                                {% firstof vehicle.brand vehicle.make vehicle.model "Vehicle"|title %}
-                            </option>
-                        {% endfor %}
-                    </select>
-                {% else %}
-                    <label class="form-label small fw-bold text-secondary mb-2"><i class="fa-solid fa-car-on me-1"></i> Temporary Vehicle Details</label>
-                    <div class="row g-2">
-                        <div class="col-7">
-                            <input type="text" id="master-custom-make" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2" placeholder="e.g. Toyota Fielder" required>
-                        </div>
-                        <div class="col-5">
-                            <input type="text" id="master-custom-plate" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2 text-uppercase" placeholder="KXX 123X" required>
-                        </div>
+        <!-- VEHICLE SELECTION BLOCK -->
+        <div class="bg-light p-3 rounded-4 mb-3 border border-secondary border-opacity-10 max-w-md mx-auto">
+            {% if vehicles %}
+                <label class="form-label small fw-bold text-secondary mb-1"><i class="fa-solid fa-car me-1"></i> Which car are you driving?</label>
+                <select id="master-vehicle-select" class="form-select border-0 shadow-sm rounded-3 py-2 fw-semibold text-dark">
+                    {% for vehicle in vehicles %}
+                        <option value="{{ vehicle.id }}">
+                            {% firstof vehicle.plate_number vehicle.registration_number vehicle.license_plate "No Plate"|upper %} 
+                            — 
+                            {% firstof vehicle.brand vehicle.make vehicle.model "Vehicle"|title %}
+                        </option>
+                    {% endfor %}
+                </select>
+            {% else %}
+                <label class="form-label small fw-bold text-secondary mb-2"><i class="fa-solid fa-car-on me-1"></i> Temporary Vehicle Details</label>
+                <div class="row g-2">
+                    <div class="col-7">
+                        <input type="text" id="master-custom-make" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2" placeholder="e.g. Toyota Fielder" required>
                     </div>
-                {% endif %}
-            </div>  
-         <!-- ASSISTANCE BUTTONS GRID -->
+                    <div class="col-5">
+                        <input type="text" id="master-custom-plate" class="form-control form-control-sm rounded-3 shadow-sm border-0 py-2 text-uppercase" placeholder="KXX 123X" required>
+                    </div>
+                </div>
+                <div id="vehicle-error-msg" class="text-danger small fw-bold mt-2 d-none"><i class="fa-solid fa-circle-exclamation me-1"></i> Please provide vehicle details.</div>
+            {% endif %}
+        </div>  
+
+        <!-- ASSISTANCE BUTTONS GRID -->
         <div class="row g-3 max-w-md mx-auto">
             <!-- Button 1: Car Wont Start -->
             <div class="col-6">
@@ -159,12 +169,11 @@
                     <input type="hidden" name="latitude" class="lat-input" value="">
                     <input type="hidden" name="longitude" class="lng-input" value="">
                     
-                    <!-- Dynamic Hidden Vehicle Inputs -->
                     <input type="hidden" name="vehicle_id" class="form-vehicle-id" value="">
                     <input type="hidden" name="custom_make" class="form-custom-make" value="">
                     <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
 
-                    <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25">
+                    <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25 service-btn-hover">
                         <i class="fa-solid fa-car-battery fs-2 mb-2 text-primary"></i>
                         <span class="fw-bold small text-dark">Engine failure</span>
                     </button>
@@ -183,7 +192,7 @@
                     <input type="hidden" name="custom_make" class="form-custom-make" value="">
                     <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
 
-                    <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25">
+                    <button type="submit" class="btn btn-outline-primary w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-primary bg-primary bg-opacity-10 shadow-sm border-opacity-25 service-btn-hover">
                         <i class="fa-solid fa-compact-disc fs-2 mb-2 text-primary"></i>
                         <span class="fw-bold small text-dark">Flat Tire</span>
                     </button>
@@ -202,7 +211,7 @@
                     <input type="hidden" name="custom_make" class="form-custom-make" value="">
                     <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
 
-                    <button type="submit" class="btn btn-outline-warning w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-warning bg-warning bg-opacity-10 shadow-sm border-opacity-50">
+                    <button type="submit" class="btn btn-outline-warning w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-warning bg-warning bg-opacity-10 shadow-sm border-opacity-50 service-btn-hover">
                         <i class="fa-solid fa-triangle-exclamation fs-2 mb-2 text-warning"></i>
                         <span class="fw-bold small text-dark">Smoke / Noise</span>
                     </button>
@@ -221,7 +230,7 @@
                     <input type="hidden" name="custom_make" class="form-custom-make" value="">
                     <input type="hidden" name="custom_plate" class="form-custom-plate" value="">
 
-                    <button type="submit" class="btn btn-outline-danger w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-danger bg-danger bg-opacity-10 shadow-sm border-opacity-50">
+                    <button type="submit" class="btn btn-outline-danger w-100 h-100 py-4 rounded-4 d-flex flex-column align-items-center border border-danger bg-danger bg-opacity-10 shadow-sm border-opacity-50 service-btn-hover">
                         <i class="fa-solid fa-circle-question fs-2 mb-2 text-danger custom-pulse"></i>
                         <span class="fw-bold small text-danger">Help</span>
                     </button>
@@ -236,7 +245,7 @@
         <div class="bg-white rounded-4 shadow-lg p-4 text-center">
             <div class="spinner-border text-primary mb-3" style="width: 3.5rem; height: 3.5rem;" role="status"></div>
             <h3 class="h5 fw-bold text-dark">Contacting Mechanics...</h3>            
-            <form action="{% url 'cancel_request' active_job.id %}" method="POST" class="mt-3 pt-3 border-top" onsubmit="return confirm('Cancel request?')">
+            <form action="{% url 'cancel_request' active_job.id %}" method="POST" class="mt-3 pt-3 border-top" onsubmit="return confirm('Are you sure you want to cancel this request?')">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-link text-danger text-decoration-none fw-bold small w-100">Cancel Request</button>
             </form>
@@ -245,7 +254,6 @@
 
     <div id="accepted-screen" class="position-absolute bottom-0 start-50 translate-middle-x w-100 px-3 {% if active_job.status == 'Pending' %}d-none{% endif %}" style="max-width: 400px; z-index: 20; padding-bottom: 90px;">
         <div class="bg-white rounded-4 shadow-lg border overflow-hidden">
-            <!-- Enhanced Header with Distance & ETA Badge -->
             <div class="bg-success text-white text-center py-2 px-3 fw-bold small shadow-sm d-flex justify-content-between align-items-center">
                 <span><i class="fa-solid fa-circle-check me-2"></i> Mechanic on the way!</span>
                 <span class="badge bg-white text-success px-2 py-1 rounded-pill" id="eta-badge">Calculating...</span>
@@ -258,7 +266,7 @@
                     <p class="small fw-semibold text-primary mt-1 mb-0" id="mechanic-phone">{{ active_job.mechanic.phone_number|default:"Loading..." }}</p>
                 </div>
                 
-                <button onclick="toggleChat()" class="btn btn-primary bg-opacity-10 text-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center" style="width: 50px; height: 50px;">
+                <button onclick="toggleChat()" class="btn btn-primary bg-opacity-10 text-primary rounded-circle shadow-sm d-flex align-items-center justify-content-center service-btn-hover" style="width: 50px; height: 50px;">
                     <i class="fa-solid fa-message fs-5"></i>
                 </button>
             </div>
@@ -276,261 +284,67 @@
         
         <div class="offcanvas-body p-3 d-flex flex-column bg-white">
             <div id="chat-messages" class="flex-grow-1 overflow-auto mb-3 d-flex flex-column gap-2 pe-1">
-                </div>
+            </div>
             
             <form id="chat-form" onsubmit="sendMessage(event)" class="position-relative mt-auto border-top pt-3">
                 <input type="text" id="chat-input" class="form-control rounded-pill pe-5 py-2 border-secondary border-opacity-25 bg-light" placeholder="Type a message..." autocomplete="off">
-                <button type="submit" class="btn btn-primary rounded-circle position-absolute end-0 top-50 translate-middle-y me-2 d-flex align-items-center justify-content-center" style="width: 34px; height: 34px;">
+                <button type="submit" class="btn btn-primary rounded-circle position-absolute end-0 top-50 translate-middle-y me-2 d-flex align-items-center justify-content-center service-btn-hover" style="width: 34px; height: 34px;">
                     <i class="fa-solid fa-paper-plane small"></i>
                 </button>
             </form>
         </div>
     </div>
 
-<script>
-    const jobId = "{{ active_job.id }}"; 
-    const driverLat = parseFloat("{{ active_job.latitude|default:'0' }}");
-    const driverLng = parseFloat("{{ active_job.longitude|default:'0' }}");
-
-    // Haversine formula for distance calculation in kilometers
-    function calculateDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; 
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = 
-            Math.sin(dLat/2) * Math.sin(dLat/2) +
-            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
-            Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return R * c;
-    }
-
-    if (jobId && jobId !== "None") {
-    const checkInterval = setInterval(() => {
-        fetch(`/api/check-job-status/${jobId}/`) 
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'Accepted' || data.status === 'active') { 
-                    document.getElementById('waiting-screen').classList.add('d-none');
-                    document.getElementById('accepted-screen').classList.remove('d-none');
-                    document.getElementById('mechanic-name').innerText = data.mechanic_name || 'Mechanic';
-                    document.getElementById('mechanic-phone').innerText = data.mechanic_phone || '';
-
-                    // Dynamically pull latest driver coordinates from the map marker
-                    const currentDriverLat = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lat() : parseFloat("{{ active_job.latitude|default:'0' }}");
-                    const currentDriverLng = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lng() : parseFloat("{{ active_job.longitude|default:'0' }}");
-
-                    // Calculate and display distance & ETA if mechanic coordinates are available in the API response
-                    if (data.mechanic_lat && data.mechanic_lng) {
-                        const distanceKm = calculateDistance(parseFloat(data.mechanic_lat), parseFloat(data.mechanic_lng), currentDriverLat, currentDriverLng);
-                        const averageSpeedKmh = 40; // Estimated urban speed
-                        const timeMinutes = Math.max(Math.round((distanceKm / averageSpeedKmh) * 60), 1);
-                        document.getElementById('eta-badge').textContent = `${distanceKm.toFixed(1)} km (~${timeMinutes}m)`;
-                    } else {
-                        document.getElementById('eta-badge').textContent = 'Tracking unavailable';
-                    }
-                } else if (data.status === 'Cancelled' || data.status === 'None') {
-                    clearInterval(checkInterval);
-                    window.location.reload();
-                }
-            })
-            .catch(err => console.error('Error checking status:', err));
-    }, 3000); 
-}
-
-    let chatOffcanvas;
-
-    document.addEventListener("DOMContentLoaded", function() {
-        const chatEl = document.getElementById('chatSidebar');
-        if (chatEl) {
-            chatOffcanvas = new bootstrap.Offcanvas(chatEl);
-            
-            chatEl.addEventListener('show.bs.offcanvas', function () {
-                fetchMessages();
-                window.chatInterval = setInterval(fetchMessages, 3000);
-            });
-            
-            chatEl.addEventListener('hide.bs.offcanvas', function () {
-                clearInterval(window.chatInterval);
-            });
-        }
-    });
-
-    function toggleChat() {
-        if (chatOffcanvas) chatOffcanvas.toggle();
-    }
-
-    function fetchMessages() {
-        if (!jobId || jobId === "None") return;
-        
-        fetch(`/api/job/${jobId}/messages/`)
-            .then(res => res.json())
-            .then(data => {
-                if (data.status === 'success') {
-                    const chatBox = document.getElementById('chat-messages');
-                    chatBox.innerHTML = ''; 
-                    
-                    data.messages.forEach(msg => {
-                        const isMine = msg.is_mine;
-                        const alignmentClass = isMine ? 'align-items-end' : 'align-items-start';
-                        const bubbleClass = isMine ? 'bg-primary text-white chat-bubble-mine' : 'bg-light text-dark border chat-bubble-theirs';
-                        
-                        const bubbleHTML = `
-                            <div class="d-flex flex-column ${alignmentClass} w-100 mb-1">
-                                <div class="px-3 py-2 small shadow-sm ${bubbleClass}" style="max-width: 85%;">
-                                    ${msg.content}
-                                </div>
-                                <span class="text-muted mt-1 px-1" style="font-size: 0.65rem;">${msg.timestamp}</span>
-                            </div>
-                        `;
-                        chatBox.insertAdjacentHTML('beforeend', bubbleHTML);
-                    });
-                    chatBox.scrollTop = chatBox.scrollHeight;
-                }
-            });
-    }
-
-    function sendMessage(event) {
-        event.preventDefault(); 
-        const input = document.getElementById('chat-input');
-        const content = input.value.trim();
-        if (!content) return;
-
-        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
-        fetch(`/api/job/${jobId}/send-message/`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': csrfToken
-            },
-            body: JSON.stringify({ content: content })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                input.value = ''; 
-                fetchMessages(); 
-            }
-        });
-    }
-</script>
     {% endif %}
 
     <nav class="position-fixed bottom-0 start-0 mobile-nav bg-white border-top shadow-sm pb-3 pt-2" style="z-index: 1050;">
         <div class="d-flex justify-content-between align-items-center mx-auto px-3" style="max-width: 450px;">
-            
-            <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-secondary text-danger w-100 transition">
+            <a href="{% url 'driver_home' %}" class="text-decoration-none text-center text-danger w-100 transition">
                 <i class="fi fi-rr-home fs-4"></i>
                 <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Home</div>
             </a>
-
             <a href="{% url 'driver_services' %}" class="text-decoration-none text-center text-secondary w-100 transition">
                 <i class="fi fi-rr-apps fs-4"></i>
                 <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Services</div>
             </a>
-
             <a href="{% url 'driver_requests' %}" class="text-decoration-none text-center text-secondary w-100 transition">
                 <div class="position-relative d-inline-block">
                     <i class="fi fi-rr-calendar-lines fs-4"></i>
                 </div>
                 <div style="font-size: 0.75rem;" class="fw-semibold mt-1">Requests</div>
             </a>
-
             <a href="{% url 'driver_vehicles' %}" class="text-decoration-none text-center text-secondary w-100 transition">
                 <i class="fi fi-rr-car-side fs-4"></i>
                 <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Vehicles</div>
             </a>
-
             <a href="{% url 'driver_settings' %}" class="text-decoration-none text-center text-secondary w-100 transition">
                 <i class="fi fi-rr-user fs-4"></i>
                 <div style="font-size: 0.75rem;" class="fw-semibold mt-1">My Profile</div>
             </a>
-
         </div>
     </nav>
 </div>
 
-<!-- Bottom Sheet Logic -->
+
+<!-- Scripts Consolidated -->
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const sheet = document.getElementById('bottom-sheet');
-        const handleArea = document.getElementById('drag-handle-area');
-        
-        if (!sheet || !handleArea) return;
-
-        let startY = 0;
-        let currentY = 0;
-        let isDragging = false;
-        
-        let sheetHeight = sheet.offsetHeight;
-        let maxTranslate = sheetHeight - 160; 
-
-        window.addEventListener('resize', () => {
-            sheetHeight = sheet.offsetHeight;
-            maxTranslate = sheetHeight - 160;
-        });
-
-        function getDragY(e) {
-            return e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
-        }
-
-        function onDragStart(e) {
-            isDragging = true;
-            startY = getDragY(e);
-            sheet.classList.add('dragging');
-        }
-
-        function onDragMove(e) {
-            if (!isDragging) return;
-            
-            const y = getDragY(e);
-            const deltaY = y - startY;
-            let newTranslate = currentY + deltaY;
-
-            if (newTranslate < 0) newTranslate = 0; 
-            if (newTranslate > maxTranslate) newTranslate = maxTranslate; 
-
-            sheet.style.transform = `translateY(${newTranslate}px)`;
-            if (e.cancelable) e.preventDefault(); 
-        }
-
-        function onDragEnd(e) {
-            if (!isDragging) return;
-            isDragging = false;
-            sheet.classList.remove('dragging');
-
-            const y = e.type.includes('mouse') ? e.pageY : e.changedTouches[0].pageY;
-            const deltaY = y - startY;
-            currentY += deltaY;
-
-            if (currentY < 0) currentY = 0;
-            if (currentY > maxTranslate) currentY = maxTranslate;
-
-            if (currentY > maxTranslate / 2) {
-                currentY = maxTranslate; 
-            } else {
-                currentY = 0; 
-            }
-
-            sheet.style.transform = `translateY(${currentY}px)`;
-        }
-
-        handleArea.addEventListener('mousedown', onDragStart);
-        document.addEventListener('mousemove', onDragMove, { passive: false });
-        document.addEventListener('mouseup', onDragEnd);
-
-        handleArea.addEventListener('touchstart', onDragStart, { passive: false });
-        document.addEventListener('touchmove', onDragMove, { passive: false });
-        document.addEventListener('touchend', onDragEnd);
-    });
-</script>
-
-<!-- Google Maps & Mechanics Fetch Logic -->
-<script>
-    let map;
-    let driverMarker;
+    // --- Global Variables ---
+    const jobId = "{{ active_job.id|default:'' }}"; 
+    let map, driverMarker, chatOffcanvas;
     let mechanicMarkers = []; 
+    let activeMechanicMarker = null; // <-- Added to track active assigned mechanic
 
+    document.addEventListener("DOMContentLoaded", function() {
+        initAlerts();
+        initBottomSheet();
+        initVehicleSync();
+        if (jobId && jobId !== "None") {
+            initJobTracking();
+            initChat();
+        }
+    });
+
+    // --- Google Maps Initialization ---
     function initMap() {
         const defaultLocation = { lat: -1.286389, lng: 36.817223 };
         
@@ -552,7 +366,9 @@
         function updateCoordinates(lat, lng) {
             document.querySelectorAll('.lat-input').forEach(input => input.value = lat);
             document.querySelectorAll('.lng-input').forEach(input => input.value = lng);
-            fetchNearbyMechanics(lat, lng);
+            if (!jobId || jobId === "None") {
+                fetchNearbyMechanics(lat, lng);
+            }
         }
 
         driverMarker.addListener("dragend", () => {
@@ -568,9 +384,7 @@
                     driverMarker.setPosition(userPos);
                     updateCoordinates(userPos.lat, userPos.lng);
                 },
-                () => { 
-                    updateCoordinates(defaultLocation.lat, defaultLocation.lng); 
-                }
+                () => updateCoordinates(defaultLocation.lat, defaultLocation.lng)
             );
         } else {
             updateCoordinates(defaultLocation.lat, defaultLocation.lng);
@@ -583,12 +397,10 @@
             .then(data => {
                 mechanicMarkers.forEach(marker => marker.setMap(null));
                 mechanicMarkers = [];
-
                 const mechanicIcon = {
                     url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png",
                     scaledSize: new google.maps.Size(40, 40)
                 };
-
                 data.mechanics.forEach(mech => {
                     const marker = new google.maps.Marker({
                         position: { lat: parseFloat(mech.latitude), lng: parseFloat(mech.longitude) },
@@ -596,66 +408,226 @@
                         icon: mechanicIcon,
                         title: mech.shop_name || "Mechanic Workshop"
                     });
-
                     const infoWindow = new google.maps.InfoWindow({
                         content: `<div class="p-1"><b class="text-dark">${mech.shop_name || 'Mechanic Shop'}</b><br><span class="text-muted small">Active Workshop</span></div>`
                     });
-
-                    marker.addListener("click", () => {
-                        infoWindow.open(map, marker);
-                    });
-
+                    marker.addListener("click", () => infoWindow.open(map, marker));
                     mechanicMarkers.push(marker);
                 });
             })
             .catch(err => console.error("Error loading nearby workshops:", err));
     }
-</script>
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe4GU6oLqQ07M5WCL_EJGUZZmDpsovugg&callback=initMap"></script>
 
-<!-- Auto-dismiss alerts script -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const alerts = document.querySelectorAll('.auto-dismiss-alert');
-        
-        alerts.forEach(alert => {
-            setTimeout(() => {
-                alert.style.opacity = '0'; 
-                setTimeout(() => { alert.remove(); }, 500); 
-            }, 4000); 
-        });
-    });
-</script>
-
-<!-- VEHICLE SYNC SCRIPT -->
-<script>
-    document.addEventListener("DOMContentLoaded", function() {
+    // --- Form Validation & Vehicle Sync ---
+    function initVehicleSync() {
         const assistanceForms = document.querySelectorAll('.assistance-submit-form');
-        
         assistanceForms.forEach(form => {
-            form.addEventListener('submit', function() {
+            form.addEventListener('submit', function(e) {
                 const masterSelect = document.getElementById('master-vehicle-select');
+                
                 if (masterSelect) {
                     const vehicleIdInput = form.querySelector('.form-vehicle-id');
-                    if (vehicleIdInput) {
-                        vehicleIdInput.value = masterSelect.value;
-                    }
+                    if (vehicleIdInput) vehicleIdInput.value = masterSelect.value;
                 } else {
                     const masterMake = document.getElementById('master-custom-make');
                     const masterPlate = document.getElementById('master-custom-plate');
+                    const errorMsg = document.getElementById('vehicle-error-msg');
                     
-                    const customMakeInput = form.querySelector('.form-custom-make');
-                    const customPlateInput = form.querySelector('.form-custom-plate');
+                    if (!masterMake.value.trim() || !masterPlate.value.trim()) {
+                        e.preventDefault();
+                        errorMsg.classList.remove('d-none');
+                        if (!masterMake.value.trim()) masterMake.focus();
+                        else masterPlate.focus();
+                        return;
+                    }
                     
-                    if (masterMake && customMakeInput) {
-                        customMakeInput.value = masterMake.value;
-                    }
-                    if (masterPlate && customPlateInput) {
-                        customPlateInput.value = masterPlate.value;
-                    }
+                    errorMsg.classList.add('d-none');
+                    form.querySelector('.form-custom-make').value = masterMake.value.trim();
+                    form.querySelector('.form-custom-plate').value = masterPlate.value.trim().toUpperCase();
                 }
             });
         });
-    });
+    }
+
+    // --- Job Tracking Logic ---
+    function calculateDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; 
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a)));
+    }
+
+    function initJobTracking() {
+        const checkInterval = setInterval(() => {
+            fetch(`/api/check-job-status/${jobId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.status === 'Accepted' || data.status === 'active') { 
+                        document.getElementById('waiting-screen').classList.add('d-none');
+                        document.getElementById('accepted-screen').classList.remove('d-none');
+                        document.getElementById('mechanic-name').innerText = data.mechanic_name || 'Mechanic';
+                        document.getElementById('mechanic-phone').innerText = data.mechanic_phone || '';
+
+                        const currentDriverLat = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lat() : parseFloat("{{ active_job.latitude|default:'0' }}");
+                        const currentDriverLng = (typeof driverMarker !== 'undefined' && driverMarker) ? driverMarker.getPosition().lng() : parseFloat("{{ active_job.longitude|default:'0' }}");
+
+                        if (data.mechanic_lat && data.mechanic_lng) {
+                            const mechLat = parseFloat(data.mechanic_lat);
+                            const mechLng = parseFloat(data.mechanic_lng);
+                            
+                            const distanceKm = calculateDistance(mechLat, mechLng, currentDriverLat, currentDriverLng);
+                            const timeMinutes = Math.max(Math.round((distanceKm / 40) * 60), 1);
+                            document.getElementById('eta-badge').textContent = `${distanceKm.toFixed(1)} km (~${timeMinutes}m)`;
+
+                            // --- FIXED: Render or update mechanic's live position marker on the map ---
+                            const mechPos = { lat: mechLat, lng: mechLng };
+                            if (typeof map !== 'undefined' && map) {
+                                if (!activeMechanicMarker) {
+                                    activeMechanicMarker = new google.maps.Marker({
+                                        position: mechPos,
+                                        map: map,
+                                        icon: {
+                                            url: "http://maps.google.com/mapfiles/ms/icons/orange-dot.png",
+                                            scaledSize: new google.maps.Size(40, 40)
+                                        },
+                                        title: "Assigned Mechanic on the way"
+                                    });
+                                } else {
+                                    activeMechanicMarker.setPosition(mechPos);
+                                }
+                            }
+                        } else {
+                            document.getElementById('eta-badge').textContent = 'Tracking unavailable';
+                        }
+                    } else if (data.status === 'Cancelled' || data.status === 'None') {
+                        clearInterval(checkInterval);
+                        if (activeMechanicMarker) {
+                            activeMechanicMarker.setMap(null);
+                        }
+                        window.location.reload();
+                    }
+                })
+                .catch(err => console.error('Error checking status:', err));
+        }, 3000); 
+    }
+
+    // --- Chat System ---
+    function initChat() {
+        const chatEl = document.getElementById('chatSidebar');
+        if (chatEl) {
+            chatOffcanvas = new bootstrap.Offcanvas(chatEl);
+            chatEl.addEventListener('show.bs.offcanvas', function () {
+                fetchMessages();
+                window.chatInterval = setInterval(fetchMessages, 3000);
+            });
+            chatEl.addEventListener('hide.bs.offcanvas', function () {
+                clearInterval(window.chatInterval);
+            });
+        }
+    }
+
+    function toggleChat() {
+        if (chatOffcanvas) chatOffcanvas.toggle();
+    }
+
+    function fetchMessages() {
+        fetch(`/api/job/${jobId}/messages/`)
+            .then(res => res.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    const chatBox = document.getElementById('chat-messages');
+                    chatBox.innerHTML = ''; 
+                    data.messages.forEach(msg => {
+                        const isMine = msg.is_mine;
+                        const bubbleHTML = `
+                            <div class="d-flex flex-column ${isMine ? 'align-items-end' : 'align-items-start'} w-100 mb-1">
+                                <div class="px-3 py-2 small shadow-sm ${isMine ? 'bg-primary text-white chat-bubble-mine' : 'bg-light text-dark border chat-bubble-theirs'}" style="max-width: 85%;">
+                                    ${msg.content}
+                                </div>
+                                <span class="text-muted mt-1 px-1" style="font-size: 0.65rem;">${msg.timestamp}</span>
+                            </div>`;
+                        chatBox.insertAdjacentHTML('beforeend', bubbleHTML);
+                    });
+                    chatBox.scrollTop = chatBox.scrollHeight;
+                }
+            });
+    }
+
+    function sendMessage(event) {
+        event.preventDefault(); 
+        const input = document.getElementById('chat-input');
+        const content = input.value.trim();
+        if (!content) return;
+
+        const csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+        fetch(`/api/job/${jobId}/send-message/`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken },
+            body: JSON.stringify({ content: content })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                input.value = ''; 
+                fetchMessages(); 
+            }
+        });
+    }
+
+    // --- UI Behaviors ---
+    function initAlerts() {
+        document.querySelectorAll('.auto-dismiss-alert').forEach(alert => {
+            setTimeout(() => {
+                alert.style.opacity = '0'; 
+                setTimeout(() => alert.remove(), 500); 
+            }, 4000); 
+        });
+    }
+
+    function initBottomSheet() {
+        const sheet = document.getElementById('bottom-sheet');
+        const handleArea = document.getElementById('drag-handle-area');
+        if (!sheet || !handleArea) return;
+
+        let startY = 0, currentY = 0, isDragging = false;
+        let maxTranslate = sheet.offsetHeight - 160; 
+
+        window.addEventListener('resize', () => maxTranslate = sheet.offsetHeight - 160);
+
+        const getDragY = e => e.type.includes('mouse') ? e.pageY : e.touches[0].pageY;
+
+        const onDragStart = e => { isDragging = true; startY = getDragY(e); sheet.classList.add('dragging'); };
+        
+        const onDragMove = e => {
+            if (!isDragging) return;
+            let newTranslate = currentY + (getDragY(e) - startY);
+            if (newTranslate < 0) newTranslate = 0; 
+            if (newTranslate > maxTranslate) newTranslate = maxTranslate; 
+            sheet.style.transform = `translateY(${newTranslate}px)`;
+            if (e.cancelable) e.preventDefault(); 
+        };
+
+        const onDragEnd = e => {
+            if (!isDragging) return;
+            isDragging = false;
+            sheet.classList.remove('dragging');
+            currentY += getDragY(e.type.includes('mouse') ? e : e.changedTouches[0]) - startY;
+            if (currentY < 0) currentY = 0;
+            if (currentY > maxTranslate) currentY = maxTranslate;
+            currentY = currentY > maxTranslate / 2 ? maxTranslate : 0;
+            sheet.style.transform = `translateY(${currentY}px)`;
+        };
+
+        handleArea.addEventListener('mousedown', onDragStart);
+        document.addEventListener('mousemove', onDragMove, { passive: false });
+        document.addEventListener('mouseup', onDragEnd);
+
+        handleArea.addEventListener('touchstart', onDragStart, { passive: false });
+        document.addEventListener('touchmove', onDragMove, { passive: false });
+        document.addEventListener('touchend', onDragEnd);
+    }
 </script>
+
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe4GU6oLqQ07M5WCL_EJGUZZmDpsovugg&libraries=places&callback=initMap"></script>
 {% endblock %}

@@ -13,6 +13,10 @@
     .dashboard-card:active {
         transform: scale(0.97);
     }
+    /* Smooth toast animation */
+    .toast-container {
+        z-index: 1060;
+    }
 </style>
 
 <div class="d-flex flex-column position-relative mx-auto shadow-lg" style="height: 100vh; width: 100%; max-width: 450px; background-color: #f8f9fa; padding-bottom: 70px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">    
@@ -69,7 +73,7 @@
                         <div class="card-body text-center p-2">
                             <i class="fa-solid fa-clock fs-5 text-warning mb-1"></i>
                             <p class="text-muted small fw-bold text-uppercase mb-0" style="font-size: 0.65rem;">Pending</p>
-                            <h5 class="fw-bolder text-dark mb-0">{{ pending_jobs|length }}</h5>
+                            <h5 class="fw-bolder text-dark mb-0" id="pending-count">{{ pending_jobs|length }}</h5>
                         </div>
                     </div>
                 </a>
@@ -139,7 +143,7 @@
         </div>
     </div>
 
-    <!-- Map Section with explicit height lock to prevent collapsing -->
+    <!-- Map Section -->
     <div class="position-relative w-100 flex-grow-1" style="background-color: #e9ecef; min-height: 400px;">
         
         <!-- The map canvas itself -->
@@ -153,7 +157,7 @@
                 <div class="card-body ps-4">
                     <div class="d-flex justify-content-between align-items-start mb-1">
                         <h4 id="card-issue-type" class="fw-bold text-dark mb-0">Issue Type</h4>
-                        <span class="badge bg-warning text-dark rounded-pill px-2 py-1">Pending</span>
+                        <span id="card-status-badge" class="badge bg-warning text-dark rounded-pill px-2 py-1">Pending</span>
                     </div>
                     
                     <div class="mb-3">
@@ -165,20 +169,36 @@
                         </p>
                     </div>  
 
-                    <div class="bg-black p-3 rounded-3 mb-3 border border-light">
+                    <!-- DRIVER & VEHICLE DETAILS -->
+                    <div class="bg-black p-3 rounded-3 mb-2 border border-light">
                         <p class="text-secondary small fw-semibold mb-1 d-flex align-items-center">
                             <i class="fa-solid fa-user text-muted me-2" style="width: 16px;"></i> 
                             <span id="card-driver-name" class="text-primary fs-6"></span>
                         </p>
-                        <p class="text-secondary small fw-semibold mb-0 d-flex align-items-center">
+                        <p class="text-secondary small fw-semibold mb-1 d-flex align-items-center">
                             <i class="fa-solid fa-phone text-muted me-2" style="width: 16px;"></i> 
                             <span id="card-driver-phone" class="text-primary fs-6"></span>
                         </p>
+                        <p class="text-secondary small fw-semibold mb-0 d-flex align-items-center">
+                            <i class="fa-solid fa-car text-muted me-2" style="width: 16px;"></i> 
+                            <span id="card-driver-plate" class="text-warning fs-6 fw-bold"></span>
+                        </p>
+                    </div>
+
+                    <!-- FUEL DETAILS BLOCK -->
+                    <div id="card-fuel-container" class="d-none bg-warning bg-opacity-10 border border-warning border-opacity-25 p-2 px-3 rounded-3 mb-3">
+                        <p class="text-dark small fw-bold mb-0 d-flex align-items-center">
+                            <i class="fa-solid fa-gas-pump text-warning me-2" style="width: 16px;"></i>
+                            <span id="card-fuel-info"></span>
+                        </p>
                     </div>
                     
-                    <div class="d-flex gap-2 w-100">
+                    <!-- Action buttons wrapped inside a controllable container -->
+                    <div id="card-actions-container" class="d-flex gap-2 w-100">
                         <form id="form-accept" method="POST" data-url="{% url 'accept_job' 999999 %}" class="flex-grow-1 m-0">
                             {% csrf_token %}
+                            <input type="hidden" name="mechanic_lat" id="accept_mechanic_lat" value="">
+                            <input type="hidden" name="mechanic_lng" id="accept_mechanic_lng" value="">
                             <button type="submit" class="btn btn-success w-100 fw-bold py-2 rounded-3 shadow-sm">
                                 ACCEPT
                             </button>
@@ -191,6 +211,11 @@
                             </button>
                         </form>
                     </div>
+
+                    <!-- Friendly text shown if the job is active -->
+                    <div id="card-active-message" class="d-none w-100 text-center py-2 bg-light rounded-3 text-success fw-bold small">
+                        <i class="fa-solid fa-route me-1"></i> You accepted this request. On your way!
+                    </div>
                     
                     <button type="button" onclick="closeCard()" class="btn btn-link text-muted w-100 mt-2 text-decoration-none fw-semibold small">
                         Close Map View
@@ -199,6 +224,19 @@
             </div>
         </div>
 
+    </div>
+
+    <!-- Notification Toast Container -->
+    <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3 mt-4" style="max-width: 450px; width: 100%;">
+        <div id="newJobToast" class="toast align-items-center text-white bg-primary border-0 rounded-4 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+            <div class="d-flex">
+                <div class="toast-body fw-bold d-flex align-items-center">
+                    <i class="fa-solid fa-bell me-2 fs-5"></i>
+                    <span id="toastMessage">New request received!</span>
+                </div>
+                <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+        </div>
     </div>
 
     <nav class="navbar fixed-bottom bg-white border-top shadow-lg py-2 px-4 rounded-top-4 mx-auto" style="z-index: 1040; max-width: 450px; right: 0; left: 0;">        
@@ -220,8 +258,7 @@
 </div>
 
 <!-- GOOGLE MAPS API SCRIPT -->
-<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe4GU6oLqQ07M5WCL_EJGUZZmDpsovugg&callback=initMap"></script>
-
+<script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCe4GU6oLqQ07M5WCL_EJGUZZmDpsovugg&libraries=places&callback=initMap"></script>
 <script>
     const pendingRequests = [
         {% for job in pending_jobs %}
@@ -230,15 +267,69 @@
             issue_type: "{{ job.issue_type|escapejs }}",
             driver_name: "{{ job.driver.first_name|escapejs }} {{ job.driver.last_name|escapejs }}",
             driver_phone: "{{ job.driver.phone_number|escapejs }}",
+            number_plate: "{{ job.licenceplate|default:'N/A'|escapejs }}",
+            fuel_quantity: "{{ job.fuel_litres|default:''|escapejs }}",
+            fuel_type: "{{ job.fuel_type|default:''|escapejs }}",
             latitude: {{ job.latitude|default:-1.286389 }},
             longitude: {{ job.longitude|default:36.817223 }},
-            created_at: "{{ job.created_at|timesince }} ago"
+            created_at: "{{ job.created_at|timesince }} ago",
+            status: "Pending"
+        },
+        {% endfor %}
+    ];
+
+    const acceptedRequests = [
+        {% for job in active_jobs %}
+        {
+            id: "{{ job.id }}",
+            issue_type: "{{ job.issue_type|escapejs }}",
+            driver_name: "{{ job.driver.first_name|escapejs }} {{ job.driver.last_name|escapejs }}",
+            driver_phone: "{{ job.driver.phone_number|escapejs }}",
+            number_plate: "{{ job.licenceplate|default:'N/A'|escapejs }}",
+            fuel_quantity: "{{ job.fuel_litres|default:''|escapejs }}",
+            fuel_type: "{{ job.fuel_type|default:''|escapejs }}",
+            latitude: {{ job.latitude|default:-1.286389 }},
+            longitude: {{ job.longitude|default:36.817223 }},
+            created_at: "{{ job.created_at|timesince }} ago",
+            status: "Accepted"
+        },
+        {% endfor %}
+        {% for job in in_progress_jobs %}
+        {
+            id: "{{ job.id }}",
+            issue_type: "{{ job.issue_type|escapejs }}",
+            driver_name: "{{ job.driver.first_name|escapejs }} {{ job.driver.last_name|escapejs }}",
+            driver_phone: "{{ job.driver.phone_number|escapejs }}",
+            number_plate: "{{ job.licenceplate|default:'N/A'|escapejs }}",
+            fuel_quantity: "{{ job.fuel_litres|default:''|escapejs }}",
+            fuel_type: "{{ job.fuel_type|default:''|escapejs }}",
+            latitude: {{ job.latitude|default:-1.286389 }},
+            longitude: {{ job.longitude|default:36.817223 }},
+            created_at: "{{ job.created_at|timesince }} ago",
+            status: "Accepted"
+        },
+        {% endfor %}
+        {% for job in accepted_jobs %}
+        {
+            id: "{{ job.id }}",
+            issue_type: "{{ job.issue_type|escapejs }}",
+            driver_name: "{{ job.driver.first_name|escapejs }} {{ job.driver.last_name|escapejs }}",
+            driver_phone: "{{ job.driver.phone_number|escapejs }}",
+            number_plate: "{{ job.vehicle.license_plate|default:'N/A'|escapejs }}",
+            fuel_quantity: "{{ job.fuel_quantity|default:''|escapejs }}",
+            fuel_type: "{{ job.fuel_type|default:''|escapejs }}",
+            latitude: {{ job.latitude|default:-1.286389 }},
+            longitude: {{ job.longitude|default:36.817223 }},
+            created_at: "{{ job.created_at|timesince }} ago",
+            status: "Accepted"
         },
         {% endfor %}
     ];
 
     let map;
+    let mechanicMarker = null; 
     let mechanicLocation = { lat: -1.286389, lng: 36.817223 }; 
+    let activeMarkers = {}; // Keep track of all markers to prevent duplicates
 
     function initMap() {
         const mapElement = document.getElementById("map");
@@ -251,30 +342,57 @@
         });
 
         if (navigator.geolocation) {
-            navigator.geolocation.getCurrentPosition(
+            navigator.geolocation.watchPosition(
                 (position) => {
                     mechanicLocation = {
                         lat: position.coords.latitude,
                         lng: position.coords.longitude
                     };
+                    
                     map.setCenter(mechanicLocation);
+
+                    if (!mechanicMarker) {
+                        mechanicMarker = new google.maps.Marker({
+                            position: mechanicLocation,
+                            map: map,
+                            title: "Your Location",
+                            icon: "http://maps.google.com/mapfiles/ms/icons/blue-dot.png"
+                        });
+                    } else {
+                        mechanicMarker.setPosition(mechanicLocation);
+                    }
+
+                    const latInput = document.getElementById('accept_mechanic_lat');
+                    const lngInput = document.getElementById('accept_mechanic_lng');
+                    if (latInput) latInput.value = mechanicLocation.lat;
+                    if (lngInput) lngInput.value = mechanicLocation.lng;
                 },
-                () => { console.log("GPS disabled, using default location."); }
+                (error) => { console.warn("GPS tracking error/disabled:", error); },
+                { enableHighAccuracy: true, maximumAge: 10000, timeout: 5000 }
             );
         }
 
-        pendingRequests.forEach(req => {
-            const marker = new google.maps.Marker({
-                position: { lat: req.latitude, lng: req.longitude },
-                map: map,
-                title: req.issue_type,
-                animation: google.maps.Animation.DROP 
-            });
+        // Plot pending driver requests (Standard Red Pins)
+        pendingRequests.forEach(req => addMarkerToMap(req, false));
 
-            marker.addListener("click", () => {
-                showRequestDetails(req);
-            });
+        // Plot accepted requests (Distinct Green Pins)
+        acceptedRequests.forEach(req => addMarkerToMap(req, true));
+    }
+
+    // Helper function to keep map plotting DRY
+    function addMarkerToMap(req, isAccepted) {
+        if (activeMarkers[req.id]) return; // Skip if already on map
+
+        const marker = new google.maps.Marker({
+            position: { lat: req.latitude, lng: req.longitude },
+            map: map,
+            title: isAccepted ? `Active Task: ${req.issue_type}` : req.issue_type,
+            icon: isAccepted ? "http://maps.google.com/mapfiles/ms/icons/green-dot.png" : null,
+            animation: google.maps.Animation.DROP 
         });
+
+        marker.addListener("click", () => showRequestDetails(req));
+        activeMarkers[req.id] = marker;
     }
 
     function calculateDistance(lat1, lon1, lat2, lon2) {
@@ -293,16 +411,50 @@
         document.getElementById("card-issue-type").textContent = req.issue_type;
         document.getElementById("card-driver-name").textContent = req.driver_name;
         document.getElementById("card-driver-phone").textContent = req.driver_phone;
+        document.getElementById("card-driver-plate").textContent = req.number_plate || "N/A";
         document.getElementById("card-time").textContent = req.created_at;
+
+        // Render Fuel Information if available
+       const fuelContainer = document.getElementById("card-fuel-container");
+        const fuelInfo = document.getElementById("card-fuel-info");
+
+        // Explicitly check for valid non-empty values
+        if (req.fuel_quantity !== undefined && req.fuel_quantity !== null && req.fuel_quantity !== "" && req.fuel_quantity !== "None") {
+            let detailStr = `Requested: ${req.fuel_quantity} Liters`;
+            if (req.fuel_type) {
+                detailStr += ` (${req.fuel_type})`;
+            }
+            fuelInfo.textContent = detailStr;
+            fuelContainer.classList.remove("d-none");
+        } else {
+            fuelContainer.classList.add("d-none");
+        }
 
         const distanceKm = calculateDistance(mechanicLocation.lat, mechanicLocation.lng, req.latitude, req.longitude);
         document.getElementById("card-distance").textContent = `${distanceKm} km`;
 
-        const acceptForm = document.getElementById("form-accept");
-        const rejectForm = document.getElementById("form-reject");
-        
-        acceptForm.action = acceptForm.getAttribute('data-url').replace('999999', req.id);
-        rejectForm.action = rejectForm.getAttribute('data-url').replace('999999', req.id);
+        const badge = document.getElementById("card-status-badge");
+        const actionsContainer = document.getElementById("card-actions-container");
+        const activeMessage = document.getElementById("card-active-message");
+
+        if (req.status === "Accepted") {
+            badge.textContent = "Active";
+            badge.className = "badge bg-success text-white rounded-pill px-2 py-1";
+            actionsContainer.classList.remove("d-flex");
+            actionsContainer.classList.add("d-none");
+            activeMessage.classList.remove("d-none");
+        } else {
+            badge.textContent = "Pending";
+            badge.className = "badge bg-warning text-dark rounded-pill px-2 py-1";
+            actionsContainer.classList.remove("d-none");
+            actionsContainer.classList.add("d-flex");
+            activeMessage.classList.add("d-none");
+
+            const acceptForm = document.getElementById("form-accept");
+            const rejectForm = document.getElementById("form-reject");
+            acceptForm.action = acceptForm.getAttribute('data-url').replace('999999', req.id);
+            rejectForm.action = rejectForm.getAttribute('data-url').replace('999999', req.id);
+        }
 
         const card = document.getElementById("request-details-card");
         card.classList.remove("d-none");
@@ -315,7 +467,7 @@
         card.classList.add("d-none");
     }
 
-    // Chat Functions
+    // Chat Functions (Ready for real-time WebSocket hookup)
     function toggleChat() {
         const chatSidebar = document.getElementById('chatSidebar');
         if (chatSidebar) {
@@ -330,19 +482,29 @@
         const messageText = input.value.trim();
         if (!messageText) return;
 
+        // Render local message
         const messagesContainer = document.getElementById('chat-messages');
         const msgDiv = document.createElement('div');
         msgDiv.className = 'p-2 rounded-3 bg-primary text-white align-self-end small shadow-sm';
         msgDiv.style.maxWidth = '80%';
         msgDiv.textContent = messageText;
+        
         messagesContainer.appendChild(msgDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        
+        // Reset input immediately
         input.value = '';
-
-        // Optional: Add AJAX fetch call here to persist the message to backend if desired
     }
 
-    let activeMarkers = {};
+    // Helper to trigger the Bootstrap notification toast
+    function showNewJobNotification(issueType) {
+        const toastEl = document.getElementById('newJobToast');
+        if (toastEl) {
+            document.getElementById('toastMessage').textContent = `New request: ${issueType}`;
+            const toast = new bootstrap.Toast(toastEl, { delay: 5000 });
+            toast.show();
+        }
+    }
 
     // Poll every 10 seconds for new requests
     setInterval(async () => {
@@ -350,25 +512,18 @@
             const response = await fetch("{% url 'api_pending_jobs' %}");
             const data = await response.json();
             
-            const pendingBadge = document.querySelector('.dashboard-card h5');
+            const pendingBadge = document.getElementById('pending-count');
             if (pendingBadge) {
                 pendingBadge.textContent = data.pending_jobs.length;
             }
 
             data.pending_jobs.forEach(req => {
+                req.status = "Pending";
+                
+                // If it's a completely new job we haven't seen yet
                 if (!activeMarkers[req.id] && map) {
-                    const marker = new google.maps.Marker({
-                        position: { lat: req.latitude, lng: req.longitude },
-                        map: map,
-                        title: req.issue_type,
-                        animation: google.maps.Animation.DROP 
-                    });
-
-                    marker.addListener("click", () => {
-                        showRequestDetails(req);
-                    });
-
-                    activeMarkers[req.id] = marker;
+                    addMarkerToMap(req, false);
+                    showNewJobNotification(req.issue_type);
                 }
             });
         } catch (error) {

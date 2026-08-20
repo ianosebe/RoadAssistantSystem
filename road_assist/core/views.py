@@ -9,8 +9,9 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.http import require_GET, require_POST
 from django.db.models import Q, Avg
 
+
 # Consolidated and cleaned up imports
-from .models import CustomUser, AssistanceRequest, Message, Vehicle, VerificationDocument, MechanicProfile, Review
+from .models import CustomUser, AssistanceRequest, Message, Vehicle, VerificationDocument, MechanicProfile, Review, ServiceCategory
 
 
 # ==========================================
@@ -155,21 +156,51 @@ def check_job_status(request, job_id):
     mechanic_lng = None
 
     if job.mechanic:
-        first_name = getattr(job.mechanic, 'first_name', '')
-        last_name = getattr(job.mechanic, 'last_name', '')
-        mechanic_name = f"{first_name} {last_name}".strip() if (first_name or last_name) else str(job.mechanic)
+        mech = job.mechanic
+        profile = getattr(mech, 'mechanicprofile', None)
+        loc = getattr(mech, 'location', None)
         
-        mechanic_phone = getattr(job.mechanic, 'phone_number', None)
+        # 1. Resolve Mechanic Name
+        first_name = getattr(mech, 'first_name', '')
+        last_name = getattr(mech, 'last_name', '')
+        if first_name or last_name:
+            mechanic_name = f"{first_name} {last_name}".strip()
+        elif profile and getattr(profile, 'shop_name', None):
+            mechanic_name = profile.shop_name
+        else:
+            mechanic_name = str(mech)
+            
+        # 2. Resolve Phone Number across user model, profile, or location
+        mechanic_phone = (
+            getattr(mech, 'phone_number', None) or 
+            getattr(profile, 'phone_number', None) or 
+            getattr(loc, 'phone_number', None)
+        )
         
-        # Safely fetch coordinates from profile or location relation
-        profile = getattr(job.mechanic, 'mechanicprofile', None)
-        loc = getattr(job.mechanic, 'location', None)
+        # 3. Resolve Coordinates with comprehensive fallbacks
+        lat = (
+            getattr(job, 'mechanic_lat', None) or 
+            getattr(profile, 'latitude', None) or 
+            getattr(loc, 'latitude', None) or 
+            getattr(mech, 'latitude', None)
+        )
+        lng = (
+            getattr(job, 'mechanic_lng', None) or 
+            getattr(profile, 'longitude', None) or 
+            getattr(loc, 'longitude', None) or 
+            getattr(mech, 'longitude', None)
+        )
         
-        lat = getattr(profile, 'latitude', None) or getattr(loc, 'latitude', None) or getattr(job.mechanic, 'latitude', None)
-        lng = getattr(profile, 'longitude', None) or getattr(loc, 'longitude', None) or getattr(job.mechanic, 'longitude', None)
-        
-        mechanic_lat = float(lat) if lat is not None else None
-        mechanic_lng = float(lng) if lng is not None else None
+        # Safely convert to float to prevent type errors
+        try:
+            mechanic_lat = float(lat) if lat is not None and lat != '' else None
+        except (ValueError, TypeError):
+            mechanic_lat = None
+            
+        try:
+            mechanic_lng = float(lng) if lng is not None and lng != '' else None
+        except (ValueError, TypeError):
+            mechanic_lng = None
 
     return JsonResponse({
         'status': job.status, 
@@ -311,17 +342,34 @@ def request_assistance(request):
 
         return redirect('driver_home')
     
+
+
 @login_required
 def accept_job(request, request_id):
     job = get_object_or_404(AssistanceRequest, id=request_id)
     
-    if job.status == 'Pending':
-        job.mechanic = request.user  
-        job.status = 'Accepted'      
-        job.save()
-        messages.success(request, f"You've accepted the {job.issue_type} request!")
-    else:
-        messages.error(request, "Sorry, another mechanic already took this job!")
+    if request.method == 'POST':
+        if job.status == 'Pending':
+            # 1. Assign the mechanic and update status
+            job.mechanic = request.user  
+            job.status = 'Accepted'      
+            
+            # 2. Grab coordinates from the hidden inputs
+            mechanic_lat = request.POST.get('mechanic_lat')
+            mechanic_lng = request.POST.get('mechanic_lng')
+            
+            # 3. Save coordinates if they were successfully captured
+            if mechanic_lat and mechanic_lng:
+                try:
+                    job.mechanic_lat = float(mechanic_lat)
+                    job.mechanic_lng = float(mechanic_lng)
+                except ValueError:
+                    pass # Ignore if non-numeric data is accidentally sent
+            
+            job.save()
+            messages.success(request, f"You've accepted the {job.issue_type} request!")
+        else:
+            messages.error(request, "Sorry, another mechanic already took this job!")
 
     return redirect('mechanic_home')
 
@@ -521,7 +569,11 @@ def car_towing_request_view(request):
         destination = request.POST.get('destination')
         notes = request.POST.get('notes', '')
         
-        # 1. Compile all textual/pricing data neatly into the description text field
+        # Capture real coordinates submitted from the form/frontend
+        lat = request.POST.get('latitude')
+        lng = request.POST.get('longitude')
+        
+        # Compile textual/pricing data neatly into the description text field
         full_description = (
             f"Service Type: {selected_service['name']}\n"
             f"Estimated Base Cost: ${selected_service['price']}\n"
@@ -530,7 +582,7 @@ def car_towing_request_view(request):
             f"Driver Notes: {notes}"
         )
         
-        # 2. Safely grab the actual Vehicle database object instance
+        # Safely grab the actual Vehicle database object instance
         vehicle_instance = None
         if vehicle_id:
             try:
@@ -538,14 +590,14 @@ def car_towing_request_view(request):
             except Vehicle.DoesNotExist:
                 pass
 
-        # 3. Create the object matching your model attributes exactly
+        # Create the object with actual coordinates
         AssistanceRequest.objects.create(
             driver=request.user,
-            issue_type='Other',  # Valid option from your model's ISSUE_CHOICES
+            issue_type='car_towing',  
             description=full_description,
             vehicle=vehicle_instance,
-            latitude=0.0,        # Placeholder float required by your model
-            longitude=0.0,       # Placeholder float required by your model
+            latitude=float(lat) if lat and lat != '' else 0.0,
+            longitude=float(lng) if lng and lng != '' else 0.0,
             status='Pending'
         )
         
@@ -557,7 +609,6 @@ def car_towing_request_view(request):
         'vehicles': user_vehicles,
     }
     return render(request, 'core/car_towing_request.html', context)
-
 def motorcycle_towing(request):
     return render(request, 'core/motorcycle_towing.html')
 
@@ -661,14 +712,28 @@ def request_list_by_status(request, status):
     return render(request, 'core/request_list.html', context)
 
 def api_pending_jobs(request):
-    jobs = AssistanceRequest.objects.filter(status='Pending', mechanic__isnull=True).select_related('driver')
+    # Added select_related('vehicle') to optimize database queries
+    jobs = AssistanceRequest.objects.filter(
+        status='Pending', 
+        mechanic__isnull=True
+    ).select_related('driver', 'vehicle')
+    
     data = []
     for job in jobs:
+        # Check job.vehicle first; if null, check driver's first saved vehicle
+        if job.vehicle:
+            plate = job.vehicle.license_plate
+        elif job.driver.vehicles.exists():
+            plate = job.driver.vehicles.first().license_plate
+        else:
+            plate = 'N/A'
+
         data.append({
             'id': job.id,
             'issue_type': job.issue_type,
-            'driver_name': f"{job.driver.first_name} {job.driver.last_name}",
-            'driver_phone': getattr(job.driver, 'phone_number', 'N/A'),
+            'driver_name': f"{job.driver.first_name} {job.driver.last_name}".strip() or job.driver.phone_number,
+            'driver_phone': job.driver.phone_number or 'N/A',
+            'number_plate': plate,
             'latitude': job.latitude,
             'longitude': job.longitude,
             'created_at': "Just now" 
@@ -733,10 +798,10 @@ def battery_jumpstart_request_view(request):
             except Vehicle.DoesNotExist:
                 pass
 
-        # Use 'Dead Battery' to map directly to your ISSUE_CHOICES
+        # Use 'Battery Jumpstart' to map directly to your ISSUE_CHOICES
         AssistanceRequest.objects.create(
             driver=request.user,
-            issue_type='Dead Battery',
+            issue_type='Battery Jumpstart',
             description=full_description,
             vehicle=vehicle_instance,
             latitude=0.0,
@@ -761,10 +826,6 @@ def fuel_delivery_options_view(request):
 def fuel_delivery_request_view(request):
     tier = request.GET.get('tier', 'regular')
     
-    # Distance-based pricing variables
-    BASE_FEE = 10.00      # Minimum fee just for dispatching
-    PER_KM_RATE = 1.50    # Cost per kilometer traveled
-    
     pricing_map = {
         'regular': {'name': 'Regular Unleaded', 'price_per_litre': 1.50},
         'premium': {'name': 'Premium Unleaded', 'price_per_litre': 1.80},
@@ -773,9 +834,20 @@ def fuel_delivery_request_view(request):
     
     selected_service = pricing_map.get(tier, pricing_map['regular'])
     user_vehicles = Vehicle.objects.filter(driver=request.user)
+    
+    # Fetch available mechanics for the driver to choose from 
+    # (Adjust filter if your project uses an explicit 'is_mechanic' boolean field)
+    mechanics = MechanicProfile.objects.filter(user__isnull=False)
+
+    # Check for any active request
+    active_request = AssistanceRequest.objects.filter(
+        driver=request.user, 
+        status__in=['Pending', 'Accepted', 'In Progress', 'active']
+    ).first()
 
     if request.method == 'POST':
         vehicle_id = request.POST.get('vehicle_id')
+        mechanic_id = request.POST.get('mechanic_id')
         location = request.POST.get('location')
         notes = request.POST.get('notes', '')
         
@@ -786,30 +858,24 @@ def fuel_delivery_request_view(request):
         except ValueError:
             litres = 5.0
             
-        # 2. Grab GPS Coordinates & Calculated Distance
+        # 2. Grab Driver GPS Coordinates
         lat_str = request.POST.get('latitude', '0.0')
         lng_str = request.POST.get('longitude', '0.0')
-        distance_str = request.POST.get('distance', '0.0')
         
         try:
             latitude = float(lat_str)
             longitude = float(lng_str)
-            distance_km = float(distance_str)
         except ValueError:
             latitude = 0.0
             longitude = 0.0
-            distance_km = 0.0
             
-        # 3. Calculate Final Costs
+        # 3. Calculate upfront fuel cost only (delivery fee is calculated after acceptance)
         fuel_cost = litres * selected_service['price_per_litre']
-        delivery_cost = BASE_FEE + (distance_km * PER_KM_RATE)
-        total_cost = fuel_cost + delivery_cost
         
         full_description = (
             f"Service Type: {selected_service['name']}\n"
             f"Fuel Requested: {litres} Litres\n"
-            f"Distance to Vehicle: {distance_km:.1f} km\n"
-            f"Estimated Total: ${total_cost:.2f} (Fuel: ${fuel_cost:.2f} | Delivery: ${delivery_cost:.2f})\n"
+            f"Estimated Fuel Cost: ${fuel_cost:.2f}\n"
             f"Location Notes: {location}\n"
             f"Driver Notes: {notes}"
         )
@@ -821,9 +887,17 @@ def fuel_delivery_request_view(request):
             except Vehicle.DoesNotExist:
                 pass
 
+        mechanic_instance = None
+        if mechanic_id:
+            try:
+                mechanic_instance = MechanicProfile.objects.get(id=mechanic_id)
+            except MechanicProfile.DoesNotExist:
+                pass
+
         AssistanceRequest.objects.create(
             driver=request.user,
-            issue_type='Out of Gas',
+            mechanic=mechanic_instance,
+            issue_type='Fuel Delivery',
             description=full_description,
             vehicle=vehicle_instance,
             latitude=latitude,
@@ -835,9 +909,74 @@ def fuel_delivery_request_view(request):
 
     context = {
         'selected_service': selected_service,
-        'base_fee': BASE_FEE,
-        'per_km_rate': PER_KM_RATE,
         'tier': tier,
         'vehicles': user_vehicles,
+        'mechanics': mechanics,
+        'active_request': active_request,
     }
     return render(request, 'core/fuel_delivery_request.html', context)
+
+
+@login_required
+def mechanic_specializations_view(request):
+    # 1. Access the profile safely using the lowercase 'mechanicprofile' relation
+    mechanic_profile, created = MechanicProfile.objects.get_or_create(user=request.user)
+
+    if request.method == 'POST':
+        # 2. Grab the list of checked values from the form
+        selected_specs = request.POST.getlist('specializations')
+        
+        # 3. Join them into a comma-separated string to save into your CharField
+        mechanic_profile.specialization = ", ".join(selected_specs)
+        mechanic_profile.save()
+        
+        return redirect('mechanic_profile')
+
+    # Hardcoded master list of service options to fuel your HTML checklist
+    all_services = [
+        {
+            'id': 'Engine Diagnostics', 
+            'name': 'Engine Diagnostics', 
+            'description': 'Tune-ups, overhauls, and check engine lights.',
+            'icon_class': 'fa-solid fa-gauge-high'
+        },
+        {
+            'id': 'Brakes & Suspension', 
+            'name': 'Brakes & Suspension', 
+            'description': 'Brake pads, rotors, alignments, and shocks.',
+            'icon_class': 'fa-solid fa-car-burst'
+        },
+        {
+            'id': 'Electrical Repair', 
+            'name': 'Electrical Repair', 
+            'description': 'Batteries, alternators, starters, and wiring.',
+            'icon_class': 'fa-solid fa-bolt'
+        },
+        {
+            'id': 'Emergency Towing', 
+            'name': 'Emergency Towing', 
+            'description': 'Roadside extraction and vehicle transport.',
+            'icon_class': 'fa-solid fa-truck-pickup'
+        },
+    ]
+
+    # 4. Break the comma-separated string back into a Python list for the template check
+    if mechanic_profile.specialization:
+        current_specializations = [s.strip() for s in mechanic_profile.specialization.split(',')]
+    else:
+        current_specializations = []
+
+    context = {
+        'all_services': all_services,
+        'current_specializations': current_specializations,
+    }
+    return render(request, 'core/mechanic_specialization.html', context)
+
+def cancel_job_api(request, job_id):
+    if request.method == 'POST':
+        job = get_object_or_404(AssistanceRequest, id=job_id)
+        job.status = 'Cancelled'
+        job.save()
+        return JsonResponse({'status': 'success', 'message': 'Job successfully cancelled.'})
+    return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
+

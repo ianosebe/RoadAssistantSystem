@@ -29,7 +29,11 @@ urlpatterns = [
     path('mechanic/activity/', views.mechanic_activity, name='mechanic_activity'),
     path('mechanic/profile/', views.mechanic_profile, name='mechanic_profile'),
     path('requests/status/<str:status>/', views.request_list_by_status, name='request_list_by_status'),
-    
+    path('profile/personal-info/', views.driver_personal_info, name='personal_info'),
+    path('profile/help/', views.driver_help_center, name='driver_help_center'),
+    path('profile/privacy/', views.driver_privacy_policy, name='driver_privacy_policy'),
+    path('mechanic/specialization/', views.mechanic_specializations_view, name='mechanic_specialization'),
+
     # Driver Towing Services
     path('driver/car_towing/', views.car_towing, name='car_towing'),
     path('driver/motorcycle_towing/', views.motorcycle_towing, name='motorcycle_towing'),
@@ -40,6 +44,7 @@ urlpatterns = [
     path('services/battery-jumpstart/request/', views.battery_jumpstart_request_view, name='battery_jumpstart_request'),
     path('services/fuel-delivery/', views.fuel_delivery_options_view, name='fuel_delivery'),
     path('services/fuel-delivery/request/', views.fuel_delivery_request_view, name='fuel_delivery_request'),
+    
 
     # API endpoints for request logic
     path('api/create-request/', views.create_assistance_request, name='create_request'),
@@ -53,6 +58,7 @@ urlpatterns = [
     path('request/<int:request_id>/reject/', views.reject_request, name='reject_request'),
     path('mechanic/job/<int:job_id>/complete/', views.complete_job, name='complete_job'),
     path('api/pending-jobs/', views.api_pending_jobs, name='api_pending_jobs'),
+    path('api/job/<int:job_id>/cancel/', views.cancel_job_api, name='cancel_job_api'),
 
     # Driver specific views
     path('history/', views.driver_history, name='driver_history'),

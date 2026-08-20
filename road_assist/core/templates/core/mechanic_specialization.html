@@ -1,0 +1,133 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<style>
+    .specialization-card {
+        transition: all 0.2s ease-in-out;
+        cursor: pointer;
+        border: 2px solid transparent !important;
+    }
+    .specialization-card:active {
+        transform: scale(0.98);
+    }
+    /* Style when the hidden checkbox is checked */
+    .specialization-checkbox:checked + .specialization-card {
+        border-color: var(--bs-primary) !important;
+        background-color: rgba(13, 110, 253, 0.05) !important;
+    }
+    .specialization-checkbox:checked + .specialization-card .icon-box {
+        background-color: var(--bs-primary) !important;
+        color: white !important;
+    }
+    .scrollable-content {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding-bottom: 80px;
+    }
+    /* Hide scrollbar browser-wise */
+    .scrollable-content::-webkit-scrollbar {
+        width: 0px;
+    }
+</style>
+
+<div class="d-flex flex-column position-relative mx-auto shadow-lg" style="height: 100vh; width: 100%; max-width: 450px; background-color: #f8f9fa; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">    
+    
+    <!-- Top Header Navigation -->
+    <div class="bg-white p-3 shadow-sm d-flex align-items-center justify-content-between sticky-top" style="z-index: 100; border-bottom-left-radius: 20px; border-bottom-right-radius: 20px;">
+        <div class="d-flex align-items-center gap-3">
+            <a href="{% url 'mechanic_profile' %}" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;" title="Back to Profile">
+                <i class="fa-solid fa-arrow-left text-secondary"></i>
+            </a>
+            <div>
+                <h5 class="fw-bolder text-dark mb-0">Specializations</h5>
+                <p class="text-muted small mb-0" style="font-size: 0.75rem;">Select your mechanical expertise</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Dynamic Form Section -->
+    <form action="{% url 'mechanic_specialization' %}" method="POST" class="d-flex flex-column h-100 m-0">
+        {% csrf_token %}
+        
+        <!-- Scrollable Specialties Checklist -->
+        <div class="scrollable-content p-3">
+            
+            <div class="alert alert-info border-0 rounded-4 shadow-sm mb-3 d-flex align-items-start gap-3 bg-white border-start border-4 border-primary">
+                <div class="text-primary fs-4 mt-1">
+                    <i class="fa-solid fa-circle-info"></i>
+                </div>
+                <div>
+                    <h6 class="fw-bold text-dark mb-1">Tailored Request Routing</h6>
+                    <p class="text-secondary small mb-0" style="font-size: 0.8rem;">
+                        Drivers will match with you automatically based on the categories toggle here. Keep this updated to ensure accurate job dispatches.
+                    </p>
+                </div>
+            </div>
+
+            <div class="row g-2">
+                <!-- 
+                  Expected backend loop variables:
+                  - 'all_services': List of service category objects/dictionaries containing id, name, description, and icon class.
+                  - 'current_specializations': List of IDs currently active for this mechanic profile.
+                -->
+                {% for service in all_services %}
+                <div class="col-12">
+                    <label class="w-100 m-0 position-relative">
+                        <input type="checkbox" name="specializations" value="{{ service.id }}" class="specialization-checkbox d-none" 
+                               {% if service.id in current_specializations %}checked{% endif %}>
+                        
+                        <div class="card specialization-card bg-white border-0 shadow-sm rounded-4 p-3 d-flex flex-row align-items-center justify-content-between">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="icon-box bg-light text-secondary rounded-3 d-flex align-items-center justify-content-center shadow-sm fs-5 transition" style="width: 48px; height: 48px;">
+                                    <i class="{{ service.icon_class|default:'fa-solid fa-screwdriver-wrench' }}"></i>
+                                </div>
+                                <div>
+                                    <h6 class="fw-bold text-dark mb-0">{{ service.name }}</h6>
+                                    <small class="text-muted d-block line-clamp-1" style="font-size: 0.75rem;">{{ service.description }}</small>
+                                </div>
+                            </div>
+                            
+                            <div class="form-check form-switch pe-0 pointer-events-none">
+                                <input class="form-check-input shadow-none pointer-events-none" type="checkbox" role="switch" style="cursor: pointer;" {% if service.id in current_specializations %}checked{% endif %}>
+                            </div>
+                        </div>
+                    </label>
+                </div>
+                {% empty %}
+                <!-- Fallback Mock Data if your dynamic backend loop is not contextually populated yet -->
+                <div class="col-12">
+                    <div class="text-center py-5 text-muted">
+                        <i class="fa-solid fa-triangle-exclamation fs-2 mb-2 text-warning"></i>
+                        <p class="small fw-semibold">No specialized fields dynamically served. Configure your service models backend.</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Sticky Floating Save Button Container -->
+        <div class="position-absolute bottom-0 start-50 translate-middle-x w-100 px-3 bg-light border-top py-2 d-flex justify-content-center" style="max-width: 450px; z-index: 1040; box-shadow: 0 -4px 10px rgba(0,0,0,0.03);">
+            <button type="submit" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-md d-flex align-items-center justify-content-center gap-2">
+                <i class="fa-solid fa-floppy-disk"></i> SAVE SPECIALIZATIONS
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript to coordinate visible custom card switches with internal hidden input state changes -->
+<script>
+    document.addEventListener("DOMContentLoaded", () => {
+        const checkboxes = document.querySelectorAll('.specialization-checkbox');
+        
+        checkboxes.forEach(chk => {
+            chk.addEventListener('change', function() {
+                const parentLabel = this.closest('label');
+                const visualSwitch = parentLabel.querySelector('.form-check-input');
+                if (visualSwitch) {
+                    visualSwitch.checked = this.checked;
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

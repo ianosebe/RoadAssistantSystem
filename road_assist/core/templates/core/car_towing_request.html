@@ -19,7 +19,6 @@
             <div class="bg-white p-4 rounded-4 shadow-sm border mb-4">
                 <span class="badge bg-primary bg-opacity-10 text-primary mb-2">Selected Service</span>
                 <h2 class="h5 fw-bold text-dark mb-1">{{ selected_service.name }}</h2>
-                <p class="text-dark fw-bold fs-4 mb-0">${{ selected_service.price }} <span class="fs-6 text-muted fw-normal">base fee</span></p>
             </div>
 
             <form method="POST" class="bg-white p-4 rounded-4 shadow-sm border">
@@ -33,11 +32,6 @@
                             <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} - Plate: {{ vehicle.license_plate }}</option>
                         {% endfor %}
                     </select>
-                </div>
-
-                <div class="mb-3">
-                    <label for="pickup_location" class="form-label fw-bold small text-muted">Pickup Location</label>
-                    <input type="text" class="form-control rounded-3" id="pickup_location" name="pickup_location" required>
                 </div>
 
                 <div class="mb-3">

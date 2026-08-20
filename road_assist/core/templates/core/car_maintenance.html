@@ -1,0 +1,155 @@
+{% extends "core/base.html" %} <!-- IMPORTANT: Change "base.html" to your actual layout file if it's named differently -->
+
+{% block content %}
+<div class="container-fluid py-3 px-md-4">
+    
+    <!-- Mobile-Optimized Header / Banner -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card bg-primary text-white shadow-sm rounded-4 p-3 border-0">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+                    <div class="mb-3 mb-md-0 text-center text-md-start">
+                        <h4 class="fw-bold mb-1"><i class="fas fa-wrench me-2"></i>Maintenance</h4>
+                        <p class="mb-0 small opacity-75">Keep your vehicle in peak condition.</p>
+                    </div>
+                    <!-- Button goes full width on mobile (w-100), auto width on desktop (w-md-auto) -->
+                    <a href="{% url 'request_assistance' %}" class="btn btn-light text-primary fw-bold shadow-sm w-100 w-md-auto">
+                        <i class="fas fa-ambulance me-2"></i>Breakdown?
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Common Service Cards (Stacks on mobile, side-by-side on desktop) -->
+    <div class="row row-cols-1 row-cols-md-3 g-3 mb-4">
+        
+        <!-- Oil Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-primary-subtle text-primary p-3 rounded-circle me-3">
+                            <i class="fas fa-oil-can fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Engine Oil & Filter</h6>
+                            <small class="text-muted">5,000 - 7,500 km</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>Check levels monthly</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Replace filter every change</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Brake Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-warning-subtle text-warning p-3 rounded-circle me-3">
+                            <i class="fas fa-compact-disc fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Brake System</h6>
+                            <small class="text-muted">10,000 - 15,000 km</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>Listen for squealing</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Check fluid reservoir</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- Battery Card -->
+        <div class="col">
+            <div class="card h-100 shadow-sm border-0 rounded-4">
+                <div class="card-body">
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="bg-info-subtle text-info p-3 rounded-circle me-3">
+                            <i class="fas fa-car-battery fa-lg"></i>
+                        </div>
+                        <div>
+                            <h6 class="fw-bold mb-0">Battery & Electrical</h6>
+                            <small class="text-muted">Every 6 Months</small>
+                        </div>
+                    </div>
+                    <ul class="list-unstyled small text-muted mb-0">
+                        <li class="mb-1"><i class="fas fa-check-circle text-success me-2"></i>Clean terminal corrosion</li>
+                        <li><i class="fas fa-check-circle text-success me-2"></i>Test before long trips</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Mobile-Friendly List View (Replaces the Table) -->
+    <div class="row pb-5">
+        <div class="col-12">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-header bg-white py-3 border-0 border-bottom">
+                    <h6 class="fw-bold mb-0"><i class="fas fa-tasks me-2 text-primary"></i>Service Schedule</h6>
+                </div>
+                
+                <div class="list-group list-group-flush rounded-bottom-4">
+                    
+                    <!-- Item 1 -->
+                    <div class="list-group-item py-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">Tire Pressure Check</h6>
+                            <small class="text-secondary fw-bold">Monthly</small>
+                        </div>
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <small class="text-muted">Tires</small>
+                            <span class="badge bg-danger-subtle text-danger rounded-pill">Critical Safety</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 2 -->
+                    <div class="list-group-item py-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">Oil & Filter Replace</h6>
+                            <small class="text-secondary fw-bold">5,000 km</small>
+                        </div>
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <small class="text-muted">Engine</small>
+                            <span class="badge bg-warning-subtle text-warning-emphasis rounded-pill">Routine</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 3 -->
+                    <div class="list-group-item py-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">Tire Rotation & Balance</h6>
+                            <small class="text-secondary fw-bold">10,000 km</small>
+                        </div>
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <small class="text-muted">Tires</small>
+                            <span class="badge bg-info-subtle text-info-emphasis rounded-pill">Preventative</span>
+                        </div>
+                    </div>
+
+                    <!-- Item 4 -->
+                    <div class="list-group-item py-3">
+                        <div class="d-flex w-100 justify-content-between align-items-center mb-1">
+                            <h6 class="mb-0 fw-bold">Coolant & Transmission</h6>
+                            <small class="text-secondary fw-bold">40,000 km</small>
+                        </div>
+                        <div class="d-flex w-100 justify-content-between align-items-center">
+                            <small class="text-muted">Fluids</small>
+                            <span class="badge bg-success-subtle text-success-emphasis rounded-pill">Important</span>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

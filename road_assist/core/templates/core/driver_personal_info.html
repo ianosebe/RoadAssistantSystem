@@ -14,18 +14,24 @@
     }
 </style>
 
-<div class="mobile-shell bg-light pb-5">
-    <div class="mobile-card">
-        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
-        <div class="max-w-md d-flex align-items-center gap-3">
-            <a href="{% url 'driver_settings' %}" class="text-dark text-decoration-none d-flex align-items-center">
-                <i class="fi fi-rr-arrow-small-left fs-2 mb-0"></i>
-            </a>
+<div class="d-flex flex-column position-relative mx-auto shadow-lg min-vh-100 bg-light" style="width: 100%; max-width: 450px; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6;">
+<!-- Top Navigation Header -->
+        <div class="d-flex align-items-center gap-3 mb-4">
+            {% if request.user.mechanicprofile %}
+                <a href="{% url 'mechanic_profile' %}" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-arrow-left text-secondary"></i>
+                </a>
+            {% else %}
+                <a href="{% url 'driver_settings' %}" class="btn btn-light border rounded-circle d-flex align-items-center justify-content-center shadow-sm" style="width: 40px; height: 40px;">
+                    <i class="fa-solid fa-arrow-left text-secondary"></i>
+                </a>
+            {% endif %}
+
             <div>
-                <h1 class="h5 fw-bold text-dark mb-0">Personal Information</h1>
+                <h5 class="fw-bolder text-dark mb-0">Personal Information</h5>
+                <p class="text-muted small mb-0" style="font-size: 0.75rem;">Manage your account details</p>
             </div>
         </div>
-    </div>
 
     <div class="container mt-4 max-w-md">
 
@@ -43,7 +49,7 @@
                 
                 <div class="mb-3">
                     <label class="form-label text-muted small fw-bold text-uppercase tracking-wider" style="font-size: 0.75rem;">First Name</label>
-                    <input type="text" name="first_name" class="form-control rounded-3 py-2" value="">
+                    <input type="text" name="first_name" class="form-control rounded-3 py-2" value="{{ request.user.first_name }}">
                 </div>
 
                 <div class="mb-3">

@@ -50,25 +50,7 @@
         object-fit: cover;
     }
 
-    .recommended {
-        position: relative;
-        border: 2px solid var(--primary);
-    }
-
-    .recommended::before {
-        content: "Most Popular";
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background-color: var(--primary);
-        color: var(--white);
-        padding: 0.2rem 1rem;
-        border-radius: 20px;
-        font-size: 0.75rem;
-        font-weight: bold;
-        z-index: 10;
-    }
+    
 </style>
 
 <div class="mobile-shell bg-light pb-5">
@@ -101,22 +83,20 @@
                         </div>
                         <h2 class="card-title h6 fw-bold">Standard Trailer Haul</h2>
                         <p class="card-desc text-muted small">For boats already resting on a functional trailer. Hookup and safe road transport from ramps, marinas, or driveways to storage.</p>
-                        <div class="price fs-3 fw-bold text-dark mb-3">$110 <span class="fs-6 text-muted fw-normal">/ base</span></div>
                         <button class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm">Select Option</button>
                     </div>
                 </div>
 
                 <!-- Option 2: Hydraulic Cradle Transport -->
                 <div class="col-12">
-                    <div class="pricing-card recommended">
+                    
                         <div class="image-wrapper">
                             <img src="{% static 'images/Hydraulic_Cradle.png' %}" alt="Hydraulic Cradle Transport">
                         </div>
                         <h2 class="card-title h6 fw-bold">Hydraulic Cradle Transport</h2>
                         <p class="card-desc text-muted small">Uses a specialized hydraulic boat trailer or lift cradle. Safest option for loading watercraft directly from slips or water-side staging areas.</p>
-                        <div class="price fs-3 fw-bold text-dark mb-3">$160 <span class="fs-6 text-muted fw-normal">/ base</span></div>
                         <button class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm">Select Option</button>
-                    </div>
+                    
                 </div>
 
                 <!-- Option 3: Heavy Yacht & Oversized Transport -->
@@ -127,7 +107,6 @@
                         </div>
                         <h2 class="card-title h6 fw-bold">Heavy Yacht & Oversized Transport</h2>
                         <p class="card-desc text-muted small">Multi-axle heavy transport configuration built specifically for large cabin cruisers, sailboats, and commercial watercraft.</p>
-                        <div class="price fs-3 fw-bold text-dark mb-3">$250 <span class="fs-6 text-muted fw-normal">/ base</span></div>
                         <button class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm">Select Option</button>
                     </div>
                 </div>

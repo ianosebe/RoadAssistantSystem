@@ -28,7 +28,7 @@ DEBUG = True
 ALLOWED_HOSTS = ['192.168.100.11', '127.0.0.1', 'localhost']
 
 CSRF_TRUSTED_ORIGINS = [
-    'http://192.168.100.11:8000',
+    'http://192.168.100.107:8000',
 ]
 
 SESSION_COOKIE_SECURE = False

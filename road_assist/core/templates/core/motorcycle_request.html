@@ -1,0 +1,45 @@
+{% extends 'core/base.html' %}
+
+{% block content %}
+<div class="container mt-4" style="max-width: 500px;">
+    <h2 class="fw-bold mb-3">Request Motorcycle Service</h2>
+    <div class="card p-3 shadow-sm mb-4 bg-light border-0">
+        <h5 class="fw-bold text-primary">{{ selected_service.name }}</h5>
+    </div>
+
+    <form method="POST" action="{% url 'motorcycle_towing' %}?tier={{ tier }}">
+        {% csrf_token %}
+        
+        <!-- Automated Geolocation Fields -->
+        <input type="hidden" name="latitude" class="lat-input" value="">
+        <input type="hidden" name="longitude" class="lng-input" value="">
+
+        <!-- Select Vehicle -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Select Motorcycle </label>
+            <select name="vehicle_id" class="form-control rounded-3" required>
+                <option value="" disabled selected>Choose your motorcycle</option>
+                {% for vehicle in vehicles %}
+                    <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.license_plate }})</option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Destination -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Dropoff Destination</label>
+            <input type="text" name="destination" class="form-control rounded-3" placeholder="Enter dropoff destination" required>
+        </div>
+
+        <!-- Notes -->
+        <div class="mb-3">
+            <label class="form-label fw-bold">Additional Notes (Optional)</label>
+            <textarea name="notes" class="form-control rounded-3" rows="3" placeholder="Any specific instructions for the mechanic..."></textarea>
+        </div>
+
+        <button type="submit" class="btn btn-primary w-100 fw-bold rounded-3 py-3 shadow-sm">
+            Confirm & Dispatch Request
+        </button>
+    </form>
+</div>
+{% endblock %}

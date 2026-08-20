@@ -1,6 +1,9 @@
+import csv
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as BaseUserAdmin
+from django.http import HttpResponse
 from unfold.admin import ModelAdmin
+from unfold.decorators import action
 
 from .models import (
     AdminProfile, 
@@ -13,16 +16,14 @@ from .models import (
     VerificationDocument
 )
 
+
 # ==========================================
 # 1. ADMINS TABLE
 # ==========================================
 @admin.register(AdminProfile)
 class AdminProfileAdmin(BaseUserAdmin, ModelAdmin):
-    # Displays the 5-character Alphanumeric ID instead of the default database row ID
     list_display = ('account_id', 'phone_number', 'first_name', 'email',)
     list_display_links = ('account_id', 'phone_number')
-    
-    # Required to force Django to display non-editable fields inside details panel
     readonly_fields = ('account_id',)
     
     ordering = ('id',)
@@ -30,7 +31,6 @@ class AdminProfileAdmin(BaseUserAdmin, ModelAdmin):
     list_filter = ()
     fieldsets = ()
 
-    # Only show VIP Admins
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_superuser=True)
 
@@ -40,10 +40,8 @@ class AdminProfileAdmin(BaseUserAdmin, ModelAdmin):
 # ==========================================
 @admin.register(DriverAccount)
 class DriverAccountAdmin(BaseUserAdmin, ModelAdmin):
-    # Displays the 5-character Alphanumeric ID instead of the default database row ID
     list_display = ('account_id', 'phone_number', 'first_name', 'email', 'is_online', 'is_active',)
     list_display_links = ('account_id', 'phone_number')
-    
     readonly_fields = ('account_id',)
     
     ordering = ('id',)
@@ -51,7 +49,6 @@ class DriverAccountAdmin(BaseUserAdmin, ModelAdmin):
     list_filter = ()
     fieldsets = ()
 
-    # Only show normal users who are Drivers
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_superuser=False, role='driver')
 
@@ -61,10 +58,8 @@ class DriverAccountAdmin(BaseUserAdmin, ModelAdmin):
 # ==========================================
 @admin.register(MechanicAccount)
 class MechanicAccountAdmin(BaseUserAdmin, ModelAdmin):
-    # Displays the 5-character Alphanumeric ID instead of the default database row ID
     list_display = ('account_id', 'phone_number', 'first_name', 'email', 'is_online', 'is_active')
     list_display_links = ('account_id', 'phone_number')
-    
     readonly_fields = ('account_id',)
     
     ordering = ('id',)
@@ -72,33 +67,78 @@ class MechanicAccountAdmin(BaseUserAdmin, ModelAdmin):
     list_filter = ()
     fieldsets = ()
 
-    # Only show normal users who are Mechanics
     def get_queryset(self, request):
         return super().get_queryset(request).filter(is_superuser=False, role='mechanic')
 
 
 # ==========================================
-# 4. ASSISTANCE REQUESTS (THE MIDDLEMAN)
+# 4. ASSISTANCE REQUESTS
 # ==========================================
 @admin.register(AssistanceRequest)
 class AssistanceRequestAdmin(ModelAdmin):
-    # Replaced 'id' with 'row_number' to start counting rows smoothly from 1
     list_display = ('row_number', 'driver', 'issue_type', 'status', 'mechanic', 'created_at')
     list_filter = ('status', 'issue_type')
 
-    # Intercepts dashboard generation to calculate index numbering sequence on the fly
+    # Renders a standalone "Export CSV" button in Unfold's top header
+    actions_list = ["export_all_csv"]
+
+    @action(description="Export CSV", icon="download")
+    def export_all_csv(self, request):
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="all_assistance_requests.csv"'
+        
+        writer = csv.writer(response)
+        # Header Row
+        writer.writerow([
+            'ID', 
+            'Driver Name', 
+            'Driver Phone', 
+            'Issue', 
+            'License Plate', 
+            'Assigned Mechanic', 
+            'Mechanic Phone', 
+            'Status', 
+            'Created At'
+        ])
+        
+        # Optimize queries by selecting mechanic along with driver and vehicle
+        queryset = AssistanceRequest.objects.all().select_related('driver', 'mechanic', 'vehicle')
+        
+        for job in queryset:
+            plate = job.vehicle.license_plate if job.vehicle else 'N/A'
+            
+            # Extract mechanic details dynamically
+            if job.mechanic:
+                mechanic_name = f"{job.mechanic.first_name} {job.mechanic.last_name}".strip() or job.mechanic.username
+                mechanic_phone = getattr(job.mechanic, 'phone_number', 'N/A')
+            else:
+                mechanic_name = 'Unassigned'
+                mechanic_phone = 'N/A'
+
+            writer.writerow([
+                job.id,
+                f"{job.driver.first_name} {job.driver.last_name}".strip() or job.driver.username,
+                getattr(job.driver, 'phone_number', 'N/A'),
+                job.issue_type,
+                plate,
+                mechanic_name,
+                mechanic_phone,
+                job.status,
+                job.created_at.strftime('%Y-%m-%d %H:%M')
+            ])
+            
+        return response
+
     def changelist_view(self, request, extra_context=None):
         response = super().changelist_view(request, extra_context)
         try:
             cl = response.context_data['cl']
-            # Enumerates items explicitly starting from number 1
             for index, obj in enumerate(cl.result_list, start=1):
                 obj.row_number = index
         except (AttributeError, KeyError):
             pass
         return response
 
-    # Defines the display layout options for our custom row numbering column header
     @admin.display(description='#')
     def row_number(self, obj):
         return getattr(obj, 'row_number', '-')
@@ -127,19 +167,17 @@ class UserLocationAdmin(ModelAdmin):
         if obj.user.groups.filter(name='Mechanic').exists():
             return "Mechanic"
         return "Driver"
-    
+
+
+# ==========================================
+# 7. VEHICLES TABLE
+# ==========================================
 @admin.register(Vehicle)
-class VehicleAdmin(admin.ModelAdmin):
-    # What shows up in the main table list
+class VehicleAdmin(ModelAdmin):
     list_display = ('license_plate', 'make', 'model', 'year', 'driver') 
-    
-    # Adds a search bar at the top
     search_fields = ('license_plate', 'make', 'driver__username') 
-    
-    # Adds a filter sidebar on the right
     list_filter = ('year', 'make') 
     
-    # Groups the fields beautifully when adding/editing a vehicle
     fieldsets = (
         ('Driver Assignment', {
             'fields': ('driver',),
@@ -154,8 +192,11 @@ class VehicleAdmin(admin.ModelAdmin):
     )
 
 
+# ==========================================
+# 8. VERIFICATION DOCUMENTS TABLE
+# ==========================================
 @admin.register(VerificationDocument)
-class VerificationDocumentAdmin(admin.ModelAdmin):
+class VerificationDocumentAdmin(ModelAdmin):
     list_display = ('user', 'doc_type', 'is_approved', 'uploaded_at')
     list_filter = ('is_approved', 'doc_type')
     search_fields = ('user__username', 'user__email', 'user__first_name',)

@@ -99,10 +99,10 @@ class MechanicAccount(CustomUser):
 # ==========================================
 class AssistanceRequest(models.Model):
     STATUS_CHOICES = (
-        ('Pending', 'Pending'),       # Driver requested, waiting for a mechanic
-        ('Accepted', 'Accepted'),     # Mechanic is on the way
-        ('Completed', 'Completed'),   # Job is done
-        ('Cancelled', 'Cancelled'),   # Driver or Mechanic cancelled
+        ('Pending', 'Pending'),      # Driver requested, waiting for a mechanic
+        ('Accepted', 'Accepted'),    # Mechanic is on the way
+        ('Completed', 'Completed'),  # Job is done
+        ('Cancelled', 'Cancelled'),  # Driver or Mechanic cancelled
     )
 
     ISSUE_CHOICES = (
@@ -121,16 +121,24 @@ class AssistanceRequest(models.Model):
 
     vehicle = models.ForeignKey('Vehicle', on_delete=models.SET_NULL, null=True, blank=True)
     
+    # Driver's breakdown location coordinates
     latitude = models.FloatField()
     longitude = models.FloatField()
+
+    # Mechanic tracking coordinates
+    mechanic_lat = models.FloatField(null=True, blank=True)
+    mechanic_lng = models.FloatField(null=True, blank=True)
     
+    # --- ADDED: Fuel specific fields ---
+    fuel_litres = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    estimated_cost = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Pending')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
     def __str__(self):
         return f"{self.issue_type} for {self.driver.first_name} - {self.status}"
-    
 
 class Message(models.Model):
     assistance_request = models.ForeignKey(
@@ -238,3 +246,12 @@ class Review(models.Model):
 
     def __str__(self):
         return f"Review for {self.mechanic.username} by {self.driver.username} - {self.rating}★"
+
+
+class ServiceCategory(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(blank=True, null=True)
+    icon = models.ImageField(upload_to='service_icons/', blank=True, null=True)
+
+    def __str__(self):
+        return self.name
