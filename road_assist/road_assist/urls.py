@@ -35,7 +35,6 @@ urlpatterns = [
     path('mechanic/specialization/', views.mechanic_specializations_view, name='mechanic_specialization'),
 
     # Driver Towing Services
-    path('driver/car_towing/', views.car_towing, name='car_towing'),
     path('driver/motorcycle_towing/', views.motorcycle_towing, name='motorcycle_towing'),
     path('driver/boat_towing/', views.boat_towing, name='boat_towing'),
     path('services/car-towing/', views.car_towing_options_view, name='car_towing'),
@@ -44,6 +43,14 @@ urlpatterns = [
     path('services/battery-jumpstart/request/', views.battery_jumpstart_request_view, name='battery_jumpstart_request'),
     path('services/fuel-delivery/', views.fuel_delivery_options_view, name='fuel_delivery'),
     path('services/fuel-delivery/request/', views.fuel_delivery_request_view, name='fuel_delivery_request'),
+    
+    # New Services
+    path('services/lockout/', views.lockout_options_view, name='lockout'),
+    path('services/lockout/request/', views.lockout_request_view, name='lockout_request'),
+    path('services/winch-out/', views.winch_out_options_view, name='winch_out'),
+    path('services/winch-out/request/', views.winch_out_request_view, name='winch_out_request'),
+    path('services/tire-repair/', views.tire_repair_options_view, name='tire_repair'),
+    path('services/tire-repair/request/', views.tire_repair_request_view, name='tire_repair_request'),
     
 
     # API endpoints for request logic
@@ -72,7 +79,6 @@ urlpatterns = [
 
     # Driver Settings
     path('settings/', views.driver_settings, name='driver_settings'),
-    path('driver/settings/', views.driver_settings_view, name='driver_settings_view'), # Changed name slightly to avoid conflict
     path('settings/personal-info/', views.driver_personal_info, name='driver_personal_info'),
     path('settings/security/', views.driver_password_security, name='driver_password_security'),
     path('settings/license/', views.driver_license, name='driver_license'),

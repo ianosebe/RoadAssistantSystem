@@ -980,3 +980,127 @@ def cancel_job_api(request, job_id):
         return JsonResponse({'status': 'success', 'message': 'Job successfully cancelled.'})
     return JsonResponse({'status': 'error', 'message': 'Invalid request method.'}, status=400)
 
+
+# ==========================================
+# NEW SERVICES (Lockout, Winch Out, Tire Repair)
+# ==========================================
+
+@login_required
+def lockout_options_view(request):
+    return render(request, 'core/lockout.html')
+
+@login_required
+def lockout_request_view(request):
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        location = request.POST.get('location')
+        notes = request.POST.get('notes', '')
+        
+        full_description = (
+            f"Service Type: Lockout Service\n"
+            f"Location: {location}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Lockout',
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=float(request.POST.get('latitude', 0.0) or 0.0),
+            longitude=float(request.POST.get('longitude', 0.0) or 0.0),
+            status='Pending'
+        )
+        return redirect('driver_requests')
+
+    context = {'vehicles': user_vehicles}
+    return render(request, 'core/lockout_request.html', context)
+
+@login_required
+def winch_out_options_view(request):
+    return render(request, 'core/winch_out.html')
+
+@login_required
+def winch_out_request_view(request):
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        location = request.POST.get('location')
+        notes = request.POST.get('notes', '')
+        
+        full_description = (
+            f"Service Type: Winch Out / Extrication\n"
+            f"Location: {location}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Winch Out',
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=float(request.POST.get('latitude', 0.0) or 0.0),
+            longitude=float(request.POST.get('longitude', 0.0) or 0.0),
+            status='Pending'
+        )
+        return redirect('driver_requests')
+
+    context = {'vehicles': user_vehicles}
+    return render(request, 'core/winch_out_request.html', context)
+
+@login_required
+def tire_repair_options_view(request):
+    return render(request, 'core/tire_repair.html')
+
+@login_required
+def tire_repair_request_view(request):
+    user_vehicles = Vehicle.objects.filter(driver=request.user)
+
+    if request.method == 'POST':
+        vehicle_id = request.POST.get('vehicle_id')
+        location = request.POST.get('location')
+        notes = request.POST.get('notes', '')
+        
+        full_description = (
+            f"Service Type: Tire Repair / Replacement\n"
+            f"Location: {location}\n"
+            f"Driver Notes: {notes}"
+        )
+        
+        vehicle_instance = None
+        if vehicle_id:
+            try:
+                vehicle_instance = Vehicle.objects.get(id=vehicle_id, driver=request.user)
+            except Vehicle.DoesNotExist:
+                pass
+
+        AssistanceRequest.objects.create(
+            driver=request.user,
+            issue_type='Tire Repair',
+            description=full_description,
+            vehicle=vehicle_instance,
+            latitude=float(request.POST.get('latitude', 0.0) or 0.0),
+            longitude=float(request.POST.get('longitude', 0.0) or 0.0),
+            status='Pending'
+        )
+        return redirect('driver_requests')
+
+    context = {'vehicles': user_vehicles}
+    return render(request, 'core/tire_repair_request.html', context)

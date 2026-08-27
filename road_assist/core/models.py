@@ -110,6 +110,9 @@ class AssistanceRequest(models.Model):
         ('Dead Battery', 'Dead Battery'),
         ('Engine Overheating', 'Engine Overheating'),
         ('Out of Gas', 'Out of Gas'),
+        ('Lockout', 'Lockout'),
+        ('Winch Out', 'Winch Out'),
+        ('Tire Repair', 'Tire Repair'),
         ('Other', 'Other'),
     )
 

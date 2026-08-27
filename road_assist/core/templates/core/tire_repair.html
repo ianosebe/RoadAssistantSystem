@@ -1,0 +1,76 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel='stylesheet' href='https://cdn-uicons.flaticon.com/2.1.0/uicons-regular-rounded/css/uicons-regular-rounded.css'>
+
+<style>
+    :root {
+        --primary: #0088cc;
+        --secondary: #e6f7ff;
+        --dark: #2c3e50;
+        --white: #ffffff;
+    }
+
+    .pricing-card {
+        background-color: var(--white);
+        border-radius: 16px;
+        padding: 1.5rem;
+        text-align: center;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        border: 1px solid #eaeaea;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+    }
+
+    .pricing-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 15px 30px rgba(0,0,0,0.08);
+        border-color: var(--secondary);
+    }
+
+    .icon-wrapper {
+        width: 80px;
+        height: 80px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin: 0 auto 1rem auto;
+    }
+</style>
+
+<div class="mobile-shell bg-light pb-5">
+    <div class="mobile-card">
+        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+            <div class="d-flex align-items-center max-w-md mx-auto">
+                <a href="{% url 'driver_services' %}" class="text-decoration-none text-primary fw-bold d-flex align-items-center gap-2">
+                    <i class="fi fi-rr-arrow-left fs-5"></i> Back to Services
+                </a>
+            </div>
+        </div>
+
+        <div class="container mt-4 max-w-md text-center">
+            <h1 class="h5 fw-bold text-dark mb-1">Tire Repair / Replacement</h1>
+            <p class="text-muted small">Got a flat or blowout?</p>
+        </div>
+
+        <div class="container mt-3 max-w-md mb-5">
+            <div class="row g-3">
+                <div class="col-12">
+                    <div class="pricing-card">
+                        <div class="icon-wrapper bg-primary bg-opacity-10 text-primary">
+                            <i class="fi fi-rr-circle fs-1"></i>
+                        </div>
+                        <h2 class="card-title h6 fw-bold">Mobile Tire Change</h2>
+                        <p class="card-desc text-muted small">We will patch your tire or swap it with your spare on the spot.</p>
+                        <a href="{% url 'tire_repair_request' %}" class="btn btn-primary w-100 fw-bold py-2 rounded-3 shadow-sm text-decoration-none">Select Option</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

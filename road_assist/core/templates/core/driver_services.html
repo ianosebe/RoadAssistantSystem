@@ -25,19 +25,19 @@
 </style>
 
 <div class="mobile-shell bg-light pb-5">
-    <div class="mobile-card">
-        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+    <div class="mobile-card glass-panel" style="min-height: 100vh;">
+        <div class="bg-white bg-opacity-75 px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020; backdrop-filter: blur(10px);">
             <div class="d-flex justify-content-between align-items-center max-w-md mx-auto">
                 <div class="d-flex align-items-center gap-2">
-                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold" style="width: 40px; height: 40px;">
+                    <div class="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style="width: 40px; height: 40px;">
                         {{ request.user.first_name|slice:":1"|upper }}
                     </div>
                     <div>
-                        <span class="text-muted small d-block">Welcome back,</span>
+                        <span class="text-muted small d-block fw-semibold">Welcome back,</span>
                         <h1 class="h6 fw-bold text-dark mb-0">{{ request.user.first_name }} {{ request.user.last_name }}</h1>
                     </div>
                 </div>
-                <button class="btn btn-light rounded-circle border p-2 position-relative" style="width: 40px; height: 40px;">
+                <button class="btn btn-light rounded-circle border p-2 position-relative shadow-sm" style="width: 40px; height: 40px;">
                     <i class="fi fi-rr-bell text-secondary"></i>
                     <span class="position-absolute top-0 start-100 translate-middle p-1 bg-danger border border-light rounded-circle"></span>
                 </button>
@@ -122,7 +122,51 @@
                         </div>
                     </a>
                 </div>
-                <!-- Car Maintenance -->
+                <!-- Lockout Service -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'lockout' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-success bg-opacity-10 text-success rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <i class="fi fi-rr-key fs-1"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Lockout Service</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Keys locked inside</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Winch Out -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'winch_out' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-dark bg-opacity-10 text-dark rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <i class="fi fi-rr-truck-tow fs-1"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Winch Out</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Extrication from mud/snow</p>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Tire Repair -->
+                <div class="col-6 d-flex">
+                    <a href="{% url 'tire_repair' %}" class="text-decoration-none w-100 d-block">
+                        <div class="card h-100 border-0 shadow-sm rounded-4 service-container p-3 text-center bg-white w-100 d-flex flex-column justify-content-between">
+                            <div>
+                                <div class="bg-primary bg-opacity-10 text-primary rounded-3 py-2 mx-auto mb-2 w-100 service-img-wrapper">
+                                    <i class="fi fi-rr-circle fs-1"></i>
+                                </div>
+                                <h5 class="fw-bold text-dark small mb-1">Tire Repair</h5>
+                            </div>
+                            <p class="text-muted extra-small mb-0" style="font-size: 0.7rem;">Mobile flat repair</p>
+                        </div>
+                    </a>
+                </div>
+
 
             </div>
         </div>

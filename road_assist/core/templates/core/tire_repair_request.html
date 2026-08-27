@@ -1,0 +1,55 @@
+{% extends 'core/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="mobile-shell bg-light pb-5">
+    <div class="mobile-card">
+        <div class="bg-white px-3 pt-4 pb-3 shadow-sm border-bottom sticky-top" style="z-index: 1020;">
+            <div class="d-flex align-items-center justify-content-between max-w-md mx-auto">
+                <a href="{% url 'tire_repair' %}" class="text-decoration-none text-primary fw-bold d-flex align-items-center gap-2">
+                    <i class="fi fi-rr-arrow-left fs-5"></i> Back
+                </a>
+                <span class="fw-bold text-dark">Request Tire Repair</span>
+            </div>
+        </div>
+
+        <div class="container mt-4 max-w-md mb-5">
+            <form method="POST" action="{% url 'tire_repair_request' %}">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">Select Vehicle</label>
+                    <select name="vehicle_id" class="form-select rounded-3 py-2 bg-light border-0 shadow-sm" required>
+                        <option value="" disabled selected>Choose your vehicle...</option>
+                        {% for vehicle in vehicles %}
+                            <option value="{{ vehicle.id }}">{{ vehicle.make }} {{ vehicle.model }} ({{ vehicle.license_plate }})</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label fw-bold text-dark small">Location Details</label>
+                    <input type="text" name="location" class="form-control rounded-3 py-2 bg-light border-0 shadow-sm" placeholder="Street address or landmark" required>
+                </div>
+                
+                <input type="hidden" id="latitude" name="latitude" value="">
+                <input type="hidden" id="longitude" name="longitude" value="">
+
+                <div class="mb-4">
+                    <label class="form-label fw-bold text-dark small">Additional Notes (Optional)</label>
+                    <textarea name="notes" class="form-control rounded-3 bg-light border-0 shadow-sm" rows="3" placeholder="Any specific instructions for the mechanic..."></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-3 rounded-3 shadow-sm">Confirm Request</button>
+            </form>
+        </div>
+    </div>
+</div>
+<script>
+    if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(position => {
+            document.getElementById('latitude').value = position.coords.latitude;
+            document.getElementById('longitude').value = position.coords.longitude;
+        });
+    }
+</script>
+{% endblock %}

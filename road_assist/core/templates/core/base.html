@@ -37,6 +37,7 @@
     </script>
     
     <style>
+        body { font-family: 'Poppins', sans-serif; }
         .no-scrollbar::-webkit-scrollbar { display: none; }
         .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
         .mobile-shell,
@@ -44,20 +45,33 @@
             width: min(100%, 450px);
             margin: 0 auto;
             min-height: 100vh;
-            background: #f8fafc;
+            background: linear-gradient(135deg, #f0f4f8, #fcfcfc);
             position: relative;
         }
         .mobile-card {
-            background: #ffffff;
+            background: rgba(255, 255, 255, 0.95);
             border-radius: 32px;
-            box-shadow: 0 20px 50px rgba(0,0,0,.12);
+            box-shadow: 0 20px 50px rgba(0,0,0,0.08);
             overflow: hidden;
+            backdrop-filter: blur(10px);
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.05);
         }
         nav.mobile-nav.position-fixed.bottom-0 {
             left: 50% !important;
             transform: translateX(-50%) !important;
             width: min(100%, 450px) !important;
             max-width: 450px !important;
+            background: rgba(255, 255, 255, 0.85) !important;
+            backdrop-filter: blur(15px);
+            border-top: 1px solid rgba(0,0,0,0.05);
+            border-top-left-radius: 20px;
+            border-top-right-radius: 20px;
         }
     </style>
 </head>

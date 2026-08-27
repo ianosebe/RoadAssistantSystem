@@ -123,7 +123,7 @@
     </div>
 
     {% if not active_job %}
-    <div id="bottom-sheet" class="position-absolute bottom-0 start-0 w-100 bg-white shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
+    <div id="bottom-sheet" class="position-absolute bottom-0 start-0 w-100 glass-panel shadow-lg p-4 bottom-panel" style="z-index: 20; padding-bottom: 90px !important;">
         
         <div id="drag-handle-area" class="d-flex justify-content-center w-100">
             <div class="bg-secondary opacity-25 rounded-pill mb-2" style="width: 48px; height: 6px;"></div>
@@ -133,7 +133,7 @@
         <p class="text-muted small mb-3">Select your vehicle and problem to find mechanics near you.</p>
 
         <!-- VEHICLE SELECTION BLOCK -->
-        <div class="bg-light p-3 rounded-4 mb-3 border border-secondary border-opacity-10 max-w-md mx-auto">
+        <div class="bg-white bg-opacity-75 p-3 rounded-4 mb-3 border border-secondary border-opacity-10 max-w-md mx-auto">
             {% if vehicles %}
                 <label class="form-label small fw-bold text-secondary mb-1"><i class="fa-solid fa-car me-1"></i> Which car are you driving?</label>
                 <select id="master-vehicle-select" class="form-select border-0 shadow-sm rounded-3 py-2 fw-semibold text-dark">
